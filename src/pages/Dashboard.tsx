@@ -46,7 +46,7 @@ const Dashboard = () => {
             <ChevronRightIcon className="h-4 w-4 mx-1" />
             <span>Projects</span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sticky top-0 z-10">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
               <p className="text-muted-foreground mt-1">
@@ -56,6 +56,7 @@ const Dashboard = () => {
             <CreateProjectButton onProjectCreated={(newProject) => {
               if (newProject) {
                 setProjects(prev => [newProject, ...prev]);
+                toast.success(`Projeto "${newProject.name}" criado com sucesso!`);
               }
             }} />
           </div>
@@ -71,6 +72,7 @@ const Dashboard = () => {
             projects={projects} 
             onProjectDeleted={(id) => {
               setProjects(prev => prev.filter(p => p.id !== id));
+              toast.success('Projeto removido com sucesso!');
             }}
           />
         )}

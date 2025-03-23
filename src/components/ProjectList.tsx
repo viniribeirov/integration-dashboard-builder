@@ -6,9 +6,10 @@ import { useStaggeredAnimation } from '../utils/animations';
 
 interface ProjectListProps {
   projects: Project[];
+  onProjectDeleted?: (id: string) => void;
 }
 
-const ProjectList = ({ projects }: ProjectListProps) => {
+const ProjectList = ({ projects, onProjectDeleted }: ProjectListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   
@@ -84,8 +85,16 @@ const ProjectList = ({ projects }: ProjectListProps) => {
       </div>
       
       {filteredProjects.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">No projects found. Try adjusting your filters.</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-muted-foreground/40 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2z" />
+          </svg>
+          <p className="text-muted-foreground text-lg font-medium mb-2">Nenhum projeto encontrado</p>
+          <p className="text-muted-foreground/70 max-w-md">
+            {searchQuery || statusFilter ? 
+              "Tente ajustar os filtros de busca para encontrar seus projetos." :
+              "Você ainda não possui projetos. Clique em 'Novo Projeto' para começar."}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -94,6 +103,7 @@ const ProjectList = ({ projects }: ProjectListProps) => {
               key={project.id} 
               project={project} 
               index={index}
+              onDeleted={onProjectDeleted}
             />
           ))}
         </div>

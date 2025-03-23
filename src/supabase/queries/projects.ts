@@ -2,7 +2,6 @@
 import { supabase } from '../../integrations/supabase/client';
 import { mockProjects } from '../../services/mockData';
 import { Project } from '../../types';
-import { useAuth } from '../../hooks/useAuth';
 
 /**
  * Busca todos os projetos do usuário atual
@@ -37,11 +36,12 @@ export const getProjects = async (): Promise<Project[]> => {
       return mockProjects;
     }
     
-    // Formatar para o tipo Project (adicionando integrations que está em nosso tipo)
+    // Formatar para o tipo Project
     return data.map(project => ({
       ...project,
       integrations: [],
-      owner_id: project.user_id
+      // Garantir que o status seja um dos tipos permitidos
+      status: (project.status as 'active' | 'inactive' | 'pending' | null) || 'active'
     }));
   } catch (error) {
     console.error('Erro ao buscar projetos:', error);
@@ -76,11 +76,12 @@ export const getProjectById = async (id: string): Promise<Project | null> => {
       return project || null;
     }
     
-    // Formatar para o tipo Project (adicionando integrations)
+    // Formatar para o tipo Project
     return {
       ...data,
       integrations: [],
-      owner_id: data.user_id
+      // Garantir que o status seja um dos tipos permitidos
+      status: (data.status as 'active' | 'inactive' | 'pending' | null) || 'active'
     };
   } catch (error) {
     console.error(`Erro ao buscar projeto ${id}:`, error);

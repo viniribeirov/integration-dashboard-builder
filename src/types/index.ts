@@ -14,8 +14,8 @@ export type Project = {
   created_at: string;
   updated_at: string;
   integrations: Integration[];
-  status: 'active' | 'inactive' | 'pending';
-  owner_id: string;
+  status: 'active' | 'inactive' | 'pending' | null;
+  user_id: string;
   thumbnail?: string;
 };
 

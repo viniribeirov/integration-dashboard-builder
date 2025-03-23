@@ -10,10 +10,16 @@ import { Project } from '../../types';
 export const createProject = async (projectData: {
   name: string;
   description: string;
-  status?: 'active' | 'inactive' | 'pending';
+  status?: 'active' | 'inactive' | 'pending' | null;
   thumbnail?: string;
 }): Promise<Project | null> => {
   try {
+    // Validar dados
+    if (!projectData.name.trim()) {
+      console.error('Nome do projeto não pode ser vazio');
+      return null;
+    }
+    
     // Obtém o usuário atual
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -46,7 +52,7 @@ export const createProject = async (projectData: {
     return {
       ...data,
       integrations: [],
-      owner_id: data.user_id
+      status: (data.status as 'active' | 'inactive' | 'pending' | null)
     };
   } catch (error) {
     console.error('Erro ao criar projeto:', error);
@@ -62,18 +68,16 @@ export const createProject = async (projectData: {
  */
 export const updateProject = async (
   id: string, 
-  updates: Partial<Omit<Project, 'id' | 'created_at' | 'owner_id'>>
+  updates: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at'>>
 ): Promise<Project | null> => {
   try {
     // Formata as atualizações para a estrutura do banco
     const projectUpdates = {
       ...updates,
-      // Converte owner_id para user_id se presente
-      ...(updates.owner_id && { user_id: updates.owner_id })
+      // Remove campos que não existem na tabela
+      integrations: undefined
     };
     
-    // Remove owner_id e integrations que não existem na tabela
-    delete projectUpdates.owner_id;
     delete projectUpdates.integrations;
     
     // Atualiza o projeto no Supabase
@@ -98,7 +102,7 @@ export const updateProject = async (
     return {
       ...data,
       integrations: [],
-      owner_id: data.user_id
+      status: (data.status as 'active' | 'inactive' | 'pending' | null)
     };
   } catch (error) {
     console.error(`Erro ao atualizar projeto ${id}:`, error);

@@ -45,7 +45,7 @@ const CreateProjectButton = ({ onProjectCreated }: CreateProjectButtonProps) => 
       });
       
       if (newProject) {
-        toast.success('Projeto criado com sucesso');
+        toast.success(`Projeto "${newProject.name}" criado com sucesso!`);
         setOpen(false);
         
         // Chamamos o callback se existir
