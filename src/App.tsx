@@ -6,10 +6,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
+import { ProjectProvider } from "./contexts/ProjectContext";
 
 // Pages
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Projects from "./pages/Projects";
 import Project from "./pages/Project";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
@@ -24,15 +26,17 @@ const App = () => {
         <TooltipProvider>
           <BrowserRouter>
             <AuthProvider>
-              <Toaster />
-              <Sonner />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/project/:id" element={<Project />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <ProjectProvider>
+                <Toaster />
+                <Sonner />
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/projects" element={<Projects />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/project/:id" element={<Project />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </ProjectProvider>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>

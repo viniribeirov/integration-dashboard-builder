@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, LogOut, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 
 const Header = () => {
   const { user, signOut } = useAuth();
+  const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -35,6 +36,10 @@ const Header = () => {
     return user.email.substring(0, 2).toUpperCase();
   };
 
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
   return (
     <header 
       className={`fixed w-full top-0 z-50 transition-all duration-300 ${
@@ -44,7 +49,7 @@ const Header = () => {
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/dashboard" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
               <span className="text-white font-semibold">I</span>
             </div>
@@ -54,22 +59,20 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             <Link 
-              to="/dashboard" 
-              className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+              to="/" 
+              className={`text-sm font-medium transition-colors ${isActive('/') 
+                ? 'text-primary font-semibold' 
+                : 'text-slate-600 hover:text-primary'}`}
             >
               Dashboard
             </Link>
             <Link 
-              to="/integrations" 
-              className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+              to="/projects" 
+              className={`text-sm font-medium transition-colors ${isActive('/projects') 
+                ? 'text-primary font-semibold' 
+                : 'text-slate-600 hover:text-primary'}`}
             >
-              Integrations
-            </Link>
-            <Link 
-              to="/analytics" 
-              className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-            >
-              Analytics
+              Projetos
             </Link>
           </nav>
 
@@ -137,25 +140,18 @@ const Header = () => {
           <div className="px-4 py-5 border-t">
             <div className="flex flex-col space-y-4">
               <Link 
-                to="/dashboard" 
-                className="text-sm font-medium py-2"
+                to="/" 
+                className={`text-sm font-medium py-2 ${isActive('/') ? 'text-primary font-semibold' : ''}`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Dashboard
               </Link>
               <Link 
-                to="/integrations" 
-                className="text-sm font-medium py-2"
+                to="/projects" 
+                className={`text-sm font-medium py-2 ${isActive('/projects') ? 'text-primary font-semibold' : ''}`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Integrations
-              </Link>
-              <Link 
-                to="/analytics" 
-                className="text-sm font-medium py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Analytics
+                Projetos
               </Link>
               {user && (
                 <Button 
