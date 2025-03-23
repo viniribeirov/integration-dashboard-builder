@@ -15,8 +15,13 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
 import { createProject } from '../supabase/mutations/projects';
+import { Project } from '../types';
 
-const CreateProjectButton = () => {
+interface CreateProjectButtonProps {
+  onProjectCreated?: (project: Project | null) => void;
+}
+
+const CreateProjectButton = ({ onProjectCreated }: CreateProjectButtonProps) => {
   const [open, setOpen] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
@@ -26,7 +31,7 @@ const CreateProjectButton = () => {
     e.preventDefault();
     
     if (!projectName.trim()) {
-      toast.error('Please enter a project name');
+      toast.error('Por favor, informe um nome para o projeto');
       return;
     }
     
@@ -40,13 +45,15 @@ const CreateProjectButton = () => {
       });
       
       if (newProject) {
-        toast.success('Project created successfully');
+        toast.success('Projeto criado com sucesso');
         setOpen(false);
         
-        // Opcionalmente, recarregar a lista de projetos ou redirecionar
-        // Isso será implementado adequadamente quando conectarmos ao Supabase real
+        // Chamamos o callback se existir
+        if (onProjectCreated) {
+          onProjectCreated(newProject);
+        }
       } else {
-        toast.error('Failed to create project');
+        toast.error('Falha ao criar projeto');
       }
       
       // Reset form
@@ -54,7 +61,7 @@ const CreateProjectButton = () => {
       setProjectDescription('');
     } catch (error) {
       console.error('Error creating project:', error);
-      toast.error('Failed to create project');
+      toast.error('Falha ao criar projeto');
     } finally {
       setIsLoading(false);
     }
@@ -67,25 +74,25 @@ const CreateProjectButton = () => {
         className="shadow-sm hover:shadow"
       >
         <PlusIcon className="h-4 w-4 mr-2" />
-        New Project
+        Novo Projeto
       </Button>
       
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
+            <DialogTitle>Criar Novo Projeto</DialogTitle>
             <DialogDescription>
-              Add the details for your new integration project.
+              Adicione os detalhes para o seu novo projeto de integração.
             </DialogDescription>
           </DialogHeader>
           
           <form onSubmit={handleSubmit}>
             <div className="grid gap-6 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Project Name</Label>
+                <Label htmlFor="name">Nome do Projeto</Label>
                 <Input
                   id="name"
-                  placeholder="Enter project name"
+                  placeholder="Digite o nome do projeto"
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   className="w-full"
@@ -93,10 +100,10 @@ const CreateProjectButton = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">Descrição</Label>
                 <Textarea
                   id="description"
-                  placeholder="What is this project for?"
+                  placeholder="Para que serve este projeto?"
                   value={projectDescription}
                   onChange={(e) => setProjectDescription(e.target.value)}
                   className="w-full min-h-[100px]"
@@ -111,14 +118,14 @@ const CreateProjectButton = () => {
                 onClick={() => setOpen(false)}
                 disabled={isLoading}
               >
-                Cancel
+                Cancelar
               </Button>
               <Button 
                 type="submit"
                 disabled={isLoading}
                 className={isLoading ? 'opacity-70 cursor-not-allowed' : ''}
               >
-                {isLoading ? 'Creating...' : 'Create Project'}
+                {isLoading ? 'Criando...' : 'Criar Projeto'}
               </Button>
             </DialogFooter>
           </form>

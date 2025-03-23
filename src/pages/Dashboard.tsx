@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Project } from '../types';
 import { useOnceAnimation } from '../utils/animations';
 import { getProjects } from '../supabase/queries/projects';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -24,6 +25,7 @@ const Dashboard = () => {
         setProjects(projectsData);
       } catch (error) {
         console.error('Error fetching projects:', error);
+        toast.error('Falha ao carregar projetos');
       } finally {
         setIsLoading(false);
       }
@@ -51,7 +53,11 @@ const Dashboard = () => {
                 Manage your integration projects and connected platforms.
               </p>
             </div>
-            <CreateProjectButton />
+            <CreateProjectButton onProjectCreated={(newProject) => {
+              if (newProject) {
+                setProjects(prev => [newProject, ...prev]);
+              }
+            }} />
           </div>
         </div>
 
@@ -61,7 +67,12 @@ const Dashboard = () => {
             <div className="h-8 w-8 rounded-full border-4 border-primary border-r-transparent animate-spin" />
           </div>
         ) : (
-          <ProjectList projects={projects} />
+          <ProjectList 
+            projects={projects} 
+            onProjectDeleted={(id) => {
+              setProjects(prev => prev.filter(p => p.id !== id));
+            }}
+          />
         )}
       </div>
     </AuthLayout>

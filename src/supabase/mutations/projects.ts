@@ -11,46 +11,43 @@ export const createProject = async (projectData: {
   name: string;
   description: string;
   status?: 'active' | 'inactive' | 'pending';
+  thumbnail?: string;
 }): Promise<Project | null> => {
   try {
-    // Por enquanto apenas simulamos a criação
-    // Em uma implementação futura, usaremos o cliente Supabase:
+    // Obtém o usuário atual
+    const { data: { session } } = await supabase.auth.getSession();
     
-    /*
+    if (!session) {
+      console.error('Usuário não autenticado');
+      return null;
+    }
+    
     const newProject = {
-      ...projectData,
-      owner_id: user.id,
-      status: projectData.status || 'active'
+      name: projectData.name,
+      description: projectData.description,
+      user_id: session.user.id,
+      status: projectData.status || 'active',
+      thumbnail: projectData.thumbnail
     };
     
+    // Insere o projeto no Supabase
     const { data, error } = await supabase
       .from('projects')
       .insert(newProject)
-      .select('*')
+      .select()
       .single();
       
-    if (error) throw error;
-    return data;
-    */
+    if (error) {
+      console.error('Erro ao criar projeto:', error);
+      return null;
+    }
     
-    // Simulação de criação
-    const newId = Math.random().toString(36).substring(2, 11);
-    const now = new Date().toISOString();
-    
-    const mockProject: Project = {
-      id: newId,
-      name: projectData.name,
-      description: projectData.description,
-      created_at: now,
-      updated_at: now,
+    // Formata o resultado para o tipo Project
+    return {
+      ...data,
       integrations: [],
-      status: projectData.status || 'active',
-      owner_id: 'user-1', // ID fixo para mock
-      thumbnail: 'https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=2006&auto=format&fit=crop'
+      owner_id: data.user_id
     };
-    
-    console.log('Projeto simulado criado:', mockProject);
-    return mockProject;
   } catch (error) {
     console.error('Erro ao criar projeto:', error);
     return null;
@@ -68,35 +65,67 @@ export const updateProject = async (
   updates: Partial<Omit<Project, 'id' | 'created_at' | 'owner_id'>>
 ): Promise<Project | null> => {
   try {
-    // Em uma implementação futura, usaremos o cliente Supabase:
+    // Formata as atualizações para a estrutura do banco
+    const projectUpdates = {
+      ...updates,
+      // Converte owner_id para user_id se presente
+      ...(updates.owner_id && { user_id: updates.owner_id })
+    };
     
-    /*
+    // Remove owner_id e integrations que não existem na tabela
+    delete projectUpdates.owner_id;
+    delete projectUpdates.integrations;
+    
+    // Atualiza o projeto no Supabase
     const { data, error } = await supabase
       .from('projects')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update(projectUpdates)
       .eq('id', id)
-      .select('*, integrations(*)')
+      .select()
       .single();
       
-    if (error) throw error;
-    return data;
-    */
+    if (error) {
+      console.error(`Erro ao atualizar projeto ${id}:`, error);
+      return null;
+    }
     
-    // Simulação de atualização
-    console.log(`Simulação: projeto ${id} atualizado com`, updates);
+    if (!data) {
+      console.error(`Projeto ${id} não encontrado para atualização`);
+      return null;
+    }
+    
+    // Formata o resultado para o tipo Project
     return {
-      id,
-      name: updates.name || 'Projeto Atualizado',
-      description: updates.description || 'Descrição atualizada',
-      created_at: '2023-01-01T00:00:00Z',
-      updated_at: new Date().toISOString(),
+      ...data,
       integrations: [],
-      status: updates.status || 'active',
-      owner_id: 'user-1',
-      thumbnail: updates.thumbnail
+      owner_id: data.user_id
     };
   } catch (error) {
     console.error(`Erro ao atualizar projeto ${id}:`, error);
     return null;
+  }
+};
+
+/**
+ * Exclui um projeto
+ * @param id ID do projeto a ser excluído
+ * @returns true se bem sucedido, false caso contrário
+ */
+export const deleteProject = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+      
+    if (error) {
+      console.error(`Erro ao excluir projeto ${id}:`, error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`Erro ao excluir projeto ${id}:`, error);
+    return false;
   }
 };

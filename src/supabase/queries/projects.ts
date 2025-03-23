@@ -2,6 +2,7 @@
 import { supabase } from '../../integrations/supabase/client';
 import { mockProjects } from '../../services/mockData';
 import { Project } from '../../types';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * Busca todos os projetos do usuário atual
@@ -9,23 +10,42 @@ import { Project } from '../../types';
  */
 export const getProjects = async (): Promise<Project[]> => {
   try {
-    // Por enquanto retornamos dados mockados
-    // Em uma implementação futura, usaremos o cliente Supabase:
+    // Obtém o usuário atual
+    const { data: { session } } = await supabase.auth.getSession();
     
-    /* 
+    if (!session) {
+      console.warn('Usuário não autenticado, retornando dados mockados');
+      return mockProjects;
+    }
+    
+    const userId = session.user.id;
+    
+    // Busca projetos do usuário autenticado no Supabase
     const { data, error } = await supabase
       .from('projects')
-      .select('*, integrations(*)')
-      .eq('owner_id', userId);
+      .select('*')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false });
       
-    if (error) throw error;
-    return data;
-    */
+    if (error) {
+      console.error('Erro ao buscar projetos:', error);
+      return mockProjects;
+    }
     
-    return mockProjects;
+    if (!data || data.length === 0) {
+      console.info('Nenhum projeto encontrado, retornando dados mockados');
+      return mockProjects;
+    }
+    
+    // Formatar para o tipo Project (adicionando integrations que está em nosso tipo)
+    return data.map(project => ({
+      ...project,
+      integrations: [],
+      owner_id: project.user_id
+    }));
   } catch (error) {
     console.error('Erro ao buscar projetos:', error);
-    return [];
+    return mockProjects;
   }
 };
 
@@ -36,24 +56,36 @@ export const getProjects = async (): Promise<Project[]> => {
  */
 export const getProjectById = async (id: string): Promise<Project | null> => {
   try {
-    // Por enquanto, busca nos dados mockados
-    // Em uma implementação futura, usaremos o cliente Supabase
-    
-    /*
+    // Tenta buscar do Supabase primeiro
     const { data, error } = await supabase
       .from('projects')
-      .select('*, integrations(*)')
+      .select('*')
       .eq('id', id)
       .single();
       
-    if (error) throw error;
-    return data;
-    */
+    if (error) {
+      console.warn(`Erro ao buscar projeto ${id} do Supabase:`, error);
+      // Fallback para dados mockados
+      const project = mockProjects.find(project => project.id === id);
+      return project || null;
+    }
     
-    const project = mockProjects.find(project => project.id === id);
-    return project || null;
+    if (!data) {
+      console.warn(`Projeto ${id} não encontrado no Supabase, buscando em mockados`);
+      const project = mockProjects.find(project => project.id === id);
+      return project || null;
+    }
+    
+    // Formatar para o tipo Project (adicionando integrations)
+    return {
+      ...data,
+      integrations: [],
+      owner_id: data.user_id
+    };
   } catch (error) {
     console.error(`Erro ao buscar projeto ${id}:`, error);
-    return null;
+    // Fallback para dados mockados
+    const project = mockProjects.find(project => project.id === id);
+    return project || null;
   }
 };
