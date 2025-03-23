@@ -1,14 +1,16 @@
 
 import { useState, useEffect } from 'react';
-import { ChevronRightIcon } from 'lucide-react';
 import AuthLayout from '../components/AuthLayout';
 import ProjectSelector from '../components/ProjectSelector';
+import DateRangePicker from '../components/DateRangePicker';
 import { useProject } from '../contexts/ProjectContext';
 import { useOnceAnimation } from '../utils/animations';
 import { supabase } from '../integrations/supabase/client';
+import { DateRange } from 'react-day-picker';
 
 const Dashboard = () => {
   const { selectedProject, refreshProjects } = useProject();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const hasAnimated = useOnceAnimation(100);
 
   useEffect(() => {
@@ -33,6 +35,12 @@ const Dashboard = () => {
     };
   }, [refreshProjects]);
 
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    console.log('Date range changed:', range);
+    // Future implementation: Apply date range filter to dashboard data
+  };
+
   return (
     <AuthLayout>
       <div className={`transition-all duration-700 ease-out ${
@@ -49,7 +57,13 @@ const Dashboard = () => {
                 Visualize dados e métricas do seu projeto.
               </p>
             </div>
-            <ProjectSelector className="md:self-start" />
+            <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+              <ProjectSelector className="md:self-start" />
+              <DateRangePicker 
+                className="md:self-start" 
+                onDateRangeChange={handleDateRangeChange}
+              />
+            </div>
           </div>
         </div>
 
@@ -64,70 +78,9 @@ const Dashboard = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-              <div className="flex flex-col space-y-1.5">
-                <h3 className="text-lg font-semibold leading-none tracking-tight">Projeto Selecionado</h3>
-                <p className="text-sm text-muted-foreground">Detalhes do projeto</p>
-              </div>
-              <div className="mt-6">
-                <div className="space-y-2">
-                  <div>
-                    <span className="font-semibold">Nome:</span> {selectedProject.name}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Descrição:</span> {selectedProject.description || 'Sem descrição'}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Status:</span> {selectedProject.status || 'Não definido'}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Integrações:</span> {selectedProject.integrations?.length || 0}
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Outros cards de métricas podem ser adicionados aqui */}
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-              <div className="flex flex-col space-y-1.5">
-                <h3 className="text-lg font-semibold leading-none tracking-tight">Integrações</h3>
-                <p className="text-sm text-muted-foreground">Status das integrações</p>
-              </div>
-              <div className="mt-6">
-                {selectedProject.integrations && selectedProject.integrations.length > 0 ? (
-                  <div className="space-y-2">
-                    {selectedProject.integrations.map(integration => (
-                      <div key={integration.id} className="flex items-center justify-between">
-                        <span>{integration.name}</span>
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          integration.status === 'connected' 
-                            ? 'bg-green-100 text-green-800' 
-                            : integration.status === 'pending' 
-                              ? 'bg-yellow-100 text-yellow-800' 
-                              : 'bg-red-100 text-red-800'
-                        }`}>
-                          {integration.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Nenhuma integração configurada</p>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-              <div className="flex flex-col space-y-1.5">
-                <h3 className="text-lg font-semibold leading-none tracking-tight">Atividade Recente</h3>
-                <p className="text-sm text-muted-foreground">Últimas atualizações</p>
-              </div>
-              <div className="mt-6">
-                <p className="text-sm text-muted-foreground">Sem atividades recentes</p>
-              </div>
-            </div>
-          </div>
+          <section className="border border-dashed rounded-lg p-8 text-center text-muted-foreground">
+            Em breve você poderá adicionar widgets aqui com as métricas do seu projeto.
+          </section>
         )}
       </div>
     </AuthLayout>
