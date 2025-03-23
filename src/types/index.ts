@@ -52,5 +52,38 @@ export type Database = {
         Update: Partial<Omit<Integration, 'id' | 'created_at' | 'updated_at'>>;
       };
     };
+    Views: {
+      [key: string]: {
+        Row: Record<string, unknown>;
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+      };
+    };
+    Functions: {
+      [key: string]: unknown;
+    };
+    Enums: {
+      [key: string]: unknown;
+    };
+  };
+  storage: {
+    Tables: {
+      buckets: {
+        Row: {
+          id: string;
+          name: string;
+          public: boolean;
+        };
+      };
+      objects: {
+        Row: {
+          id: string;
+          bucket_id: string;
+          name: string;
+          owner: string;
+          metadata: Record<string, unknown>;
+        };
+      };
+    };
   };
 };

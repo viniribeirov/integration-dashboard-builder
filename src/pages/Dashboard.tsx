@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ChevronRightIcon } from 'lucide-react';
 import AuthLayout from '../components/AuthLayout';
@@ -9,6 +8,7 @@ import { Project } from '../types';
 import { useOnceAnimation } from '../utils/animations';
 import { getProjects } from '../supabase/queries/projects';
 import { toast } from 'sonner';
+import { supabase } from '../integrations/supabase/client';
 
 const Dashboard = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -38,12 +38,49 @@ const Dashboard = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('public:projects')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'projects',
+        },
+        (payload) => {
+          console.log('Received realtime update:', payload);
+          setProjects(prevProjects => {
+            return prevProjects.map(project => {
+              if (project.id === payload.new.id) {
+                return { 
+                  ...payload.new, 
+                  integrations: project.integrations 
+                } as Project;
+              }
+              return project;
+            });
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const handleProjectUpdated = (updatedProject: Project) => {
+    setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p));
+  };
+
   return (
     <AuthLayout>
       <div className={`transition-all duration-700 ease-out ${
         hasAnimated ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}>
-        {/* Page Header */}
         <div className="flex flex-col gap-1 mb-8">
           <div className="flex items-center text-sm text-muted-foreground mb-1">
             <span>Dashboard</span>
@@ -65,8 +102,6 @@ const Dashboard = () => {
             }} />
           </div>
         </div>
-
-        {/* Project List */}
         <ProjectList 
           projects={projects}
           isLoading={isLoading}
@@ -74,6 +109,7 @@ const Dashboard = () => {
             setProjects(prev => prev.filter(p => p.id !== id));
             toast.success('Projeto removido com sucesso!');
           }}
+          onProjectUpdated={handleProjectUpdated}
         />
       </div>
     </AuthLayout>

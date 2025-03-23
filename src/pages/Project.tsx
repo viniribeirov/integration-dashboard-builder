@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeftIcon, ClockIcon, CalendarIcon, Settings, PlusIcon } from 'lucide-react';
@@ -10,6 +11,9 @@ import { getStatusColor, getPlatformColor, formatDate } from '../utils/projectUt
 import { getProjectById } from '../supabase/queries/projects';
 import { useOnceAnimation } from '../utils/animations';
 import { toast } from 'sonner';
+import { supabase } from '../integrations/supabase/client';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
+import EditProjectDialog from '../components/EditProjectDialog';
 
 const Project = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,35 +23,75 @@ const Project = () => {
   const [isLoading, setIsLoading] = useState(true);
   const hasAnimated = useOnceAnimation(100);
 
-  useEffect(() => {
-    const fetchProject = async () => {
-      if (!id) return;
+  const fetchProject = async () => {
+    if (!id) return;
 
-      try {
-        setIsLoading(true);
-        const projectData = await getProjectById(id);
-        
-        if (!projectData) {
-          toast.error('Projeto não encontrado');
-          navigate('/dashboard');
-          return;
-        }
-        
-        setProject(projectData);
-        
-        // Utilizamos as integrações relacionadas diretamente do projeto
-        setIntegrations(projectData.integrations || []);
-      } catch (error) {
-        console.error(`Error fetching project ${id}:`, error);
-        toast.error('Erro ao carregar projeto');
+    try {
+      setIsLoading(true);
+      const projectData = await getProjectById(id);
+      
+      if (!projectData) {
+        toast.error('Projeto não encontrado');
         navigate('/dashboard');
-      } finally {
-        setIsLoading(false);
+        return;
       }
-    };
+      
+      setProject(projectData);
+      
+      // Utilizamos as integrações relacionadas diretamente do projeto
+      setIntegrations(projectData.integrations || []);
+    } catch (error) {
+      console.error(`Error fetching project ${id}:`, error);
+      toast.error('Erro ao carregar projeto');
+      navigate('/dashboard');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchProject();
   }, [id, navigate]);
+
+  // Setup realtime updates for the current project
+  useEffect(() => {
+    if (!id) return;
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('public:projects:single')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'projects',
+          filter: `id=eq.${id}`
+        },
+        (payload) => {
+          console.log('Received realtime update for project:', payload);
+          // Update the project in the local state while preserving integrations
+          setProject(prevProject => {
+            if (!prevProject) return null;
+            return { 
+              ...payload.new as ProjectType, 
+              integrations: prevProject.integrations 
+            };
+          });
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription when component unmounts
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id]);
+
+  const handleProjectUpdated = (updatedProject: ProjectType) => {
+    setProject(updatedProject);
+    toast.success('Projeto atualizado com sucesso!');
+  };
 
   if (isLoading) {
     return (
@@ -95,26 +139,42 @@ const Project = () => {
         </Button>
 
         {/* Project header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold tracking-tight">{project?.name}</h1>
-              <Badge className={`${getStatusColor(project?.status)} bg-transparent`}>
-                {project?.status?.charAt(0).toUpperCase() + project?.status?.slice(1) || 'Sem Status'}
-              </Badge>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+          <div className="flex items-start gap-4">
+            <Avatar className="h-16 w-16 rounded-full border border-border">
+              {project.thumbnail ? (
+                <AvatarImage src={project.thumbnail} alt={project.name} />
+              ) : (
+                <AvatarFallback className="text-xl">
+                  {project.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold tracking-tight">{project?.name}</h1>
+                <Badge className={`${getStatusColor(project?.status)} bg-transparent`}>
+                  {project?.status?.charAt(0).toUpperCase() + project?.status?.slice(1) || 'Sem Status'}
+                </Badge>
+              </div>
+              <p className="text-muted-foreground mt-1">{project?.description}</p>
+              
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                <div className="flex items-center">
+                  <CalendarIcon className="h-4 w-4 mr-1" />
+                  <span>Criado: {formatDate(project?.created_at)}</span>
+                </div>
+                <div className="flex items-center ml-4">
+                  <ClockIcon className="h-4 w-4 mr-1" />
+                  <span>Atualizado: {formatDate(project?.updated_at)}</span>
+                </div>
+              </div>
             </div>
-            <p className="text-muted-foreground mt-1">{project?.description}</p>
           </div>
           
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="flex items-center">
-              <CalendarIcon className="h-4 w-4 mr-1" />
-              <span>Criado: {formatDate(project?.created_at)}</span>
-            </div>
-            <div className="flex items-center ml-4">
-              <ClockIcon className="h-4 w-4 mr-1" />
-              <span>Atualizado: {formatDate(project?.updated_at)}</span>
-            </div>
+          <div>
+            <EditProjectDialog project={project} onProjectUpdated={handleProjectUpdated} />
           </div>
         </div>
 

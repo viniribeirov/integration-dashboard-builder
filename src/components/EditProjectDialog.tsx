@@ -1,7 +1,6 @@
 
-import { useState } from 'react';
-import { PlusIcon, Upload } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import { useState, useEffect } from 'react';
+import { Pencil, Upload } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -10,25 +9,34 @@ import {
   DialogDescription,
   DialogFooter
 } from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
-import { createProject } from '../supabase/mutations/projects';
+import { updateProject } from '../supabase/mutations/projects';
 import { Project } from '../types';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 
-interface CreateProjectButtonProps {
-  onProjectCreated?: (project: Project | null) => void;
+interface EditProjectDialogProps {
+  project: Project;
+  onProjectUpdated?: (project: Project) => void;
 }
 
-const CreateProjectButton = ({ onProjectCreated }: CreateProjectButtonProps) => {
+const EditProjectDialog = ({ project, onProjectUpdated }: EditProjectDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [projectName, setProjectName] = useState('');
-  const [projectDescription, setProjectDescription] = useState('');
+  const [name, setName] = useState(project.name);
+  const [description, setDescription] = useState(project.description || '');
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(project.thumbnail || null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Update local state if the project prop changes
+  useEffect(() => {
+    setName(project.name);
+    setDescription(project.description || '');
+    setThumbnailPreview(project.thumbnail || null);
+  }, [project]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -53,16 +61,16 @@ const CreateProjectButton = ({ onProjectCreated }: CreateProjectButtonProps) => 
   };
 
   const resetForm = () => {
-    setProjectName('');
-    setProjectDescription('');
+    setName(project.name);
+    setDescription(project.description || '');
+    setThumbnailPreview(project.thumbnail || null);
     setThumbnailFile(null);
-    setThumbnailPreview(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!projectName.trim()) {
+    if (!name.trim()) {
       toast.error('Por favor, informe um nome para o projeto');
       return;
     }
@@ -70,30 +78,27 @@ const CreateProjectButton = ({ onProjectCreated }: CreateProjectButtonProps) => 
     try {
       setIsLoading(true);
       
-      // Usamos a função de mutation para criar o projeto com a imagem
-      const newProject = await createProject({
-        name: projectName,
-        description: projectDescription || null,
+      const updatedProject = await updateProject(project.id, {
+        name,
+        description: description || null,
         thumbnailFile
       });
       
-      if (newProject) {
+      if (updatedProject) {
         setOpen(false);
-        toast.success(`Projeto "${newProject.name}" criado com sucesso!`);
         
         // Chamamos o callback se existir
-        if (onProjectCreated) {
-          onProjectCreated(newProject);
+        if (onProjectUpdated) {
+          onProjectUpdated(updatedProject);
         }
         
-        // Reset form
-        resetForm();
+        toast.success(`Projeto "${updatedProject.name}" atualizado com sucesso!`);
       } else {
-        toast.error('Falha ao criar projeto');
+        toast.error('Falha ao atualizar projeto');
       }
     } catch (error) {
-      console.error('Error creating project:', error);
-      toast.error('Falha ao criar projeto');
+      console.error('Error updating project:', error);
+      toast.error('Falha ao atualizar projeto');
     } finally {
       setIsLoading(false);
     }
@@ -101,12 +106,18 @@ const CreateProjectButton = ({ onProjectCreated }: CreateProjectButtonProps) => 
 
   return (
     <>
-      <Button 
-        onClick={() => setOpen(true)}
-        className="shadow-sm hover:shadow"
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-2 right-10 z-10 opacity-0 transition-opacity duration-200 hover:bg-secondary"
+        style={{ opacity: 0.9 }}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(true);
+        }}
       >
-        <PlusIcon className="h-4 w-4 mr-2" />
-        Novo Projeto
+        <Pencil className="h-4 w-4" />
       </Button>
       
       <Dialog open={open} onOpenChange={(isOpen) => {
@@ -115,32 +126,32 @@ const CreateProjectButton = ({ onProjectCreated }: CreateProjectButtonProps) => 
       }}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>Criar Novo Projeto</DialogTitle>
+            <DialogTitle>Editar Projeto</DialogTitle>
             <DialogDescription>
-              Adicione os detalhes para o seu novo projeto de integração.
+              Atualize os detalhes do seu projeto.
             </DialogDescription>
           </DialogHeader>
           
           <form onSubmit={handleSubmit}>
             <div className="grid gap-6 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome do Projeto</Label>
+                <Label htmlFor="edit-name">Nome do Projeto</Label>
                 <Input
-                  id="name"
+                  id="edit-name"
                   placeholder="Digite o nome do projeto"
-                  value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
+                <Label htmlFor="edit-description">Descrição</Label>
                 <Textarea
-                  id="description"
+                  id="edit-description"
                   placeholder="Para que serve este projeto?"
-                  value={projectDescription}
-                  onChange={(e) => setProjectDescription(e.target.value)}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   className="w-full min-h-[100px]"
                 />
               </div>
@@ -153,21 +164,21 @@ const CreateProjectButton = ({ onProjectCreated }: CreateProjectButtonProps) => 
                       <AvatarImage src={thumbnailPreview} alt="Preview" />
                     ) : (
                       <AvatarFallback className="text-lg">
-                        {projectName ? projectName.charAt(0).toUpperCase() : '?'}
+                        {name ? name.charAt(0).toUpperCase() : '?'}
                       </AvatarFallback>
                     )}
                   </Avatar>
                   
                   <div className="flex-1">
                     <Label 
-                      htmlFor="thumbnail" 
+                      htmlFor="edit-thumbnail" 
                       className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full cursor-pointer"
                     >
                       <Upload className="mr-2 h-4 w-4" />
                       {thumbnailFile ? 'Trocar Imagem' : 'Selecionar Imagem'}
                     </Label>
                     <Input
-                      id="thumbnail"
+                      id="edit-thumbnail"
                       type="file"
                       accept="image/*"
                       onChange={handleThumbnailChange}
@@ -197,7 +208,7 @@ const CreateProjectButton = ({ onProjectCreated }: CreateProjectButtonProps) => 
                 disabled={isLoading}
                 className={isLoading ? 'opacity-70 cursor-not-allowed' : ''}
               >
-                {isLoading ? 'Criando...' : 'Criar Projeto'}
+                {isLoading ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
             </DialogFooter>
           </form>
@@ -207,4 +218,4 @@ const CreateProjectButton = ({ onProjectCreated }: CreateProjectButtonProps) => 
   );
 };
 
-export default CreateProjectButton;
+export default EditProjectDialog;

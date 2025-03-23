@@ -5,12 +5,13 @@ import { CalendarIcon, ArrowRightIcon, Trash2Icon } from 'lucide-react';
 import { Project, Integration } from '../types';
 import { getPlatformColor, getStatusColor, formatDate } from '../utils/projectUtils';
 import { useInView } from '../utils/animations';
-import { Avatar, AvatarFallback } from '../components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Card, CardContent, CardFooter } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { deleteProject } from '../supabase/mutations/projects';
+import EditProjectDialog from './EditProjectDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,25 +27,27 @@ interface ProjectCardProps {
   project: Project;
   index: number;
   onDeleted?: (id: string) => void;
+  onUpdated?: (project: Project) => void;
 }
 
-const ProjectCard = ({ project, index, onDeleted }: ProjectCardProps) => {
+const ProjectCard = ({ project, index, onDeleted, onUpdated }: ProjectCardProps) => {
   const { ref, isInView } = useInView();
   const [isHovered, setIsHovered] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [currentProject, setCurrentProject] = useState<Project>(project);
 
   const handleDelete = async () => {
-    if (!project.id) return;
+    if (!currentProject.id) return;
     
     try {
       setIsDeleting(true);
-      const success = await deleteProject(project.id);
+      const success = await deleteProject(currentProject.id);
       
       if (success) {
         toast.success("Projeto excluído com sucesso");
         if (onDeleted) {
-          onDeleted(project.id);
+          onDeleted(currentProject.id);
         }
       } else {
         toast.error("Erro ao excluir projeto");
@@ -55,6 +58,13 @@ const ProjectCard = ({ project, index, onDeleted }: ProjectCardProps) => {
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
+    }
+  };
+
+  const handleProjectUpdated = (updatedProject: Project) => {
+    setCurrentProject(updatedProject);
+    if (onUpdated) {
+      onUpdated(updatedProject);
     }
   };
 
@@ -87,13 +97,19 @@ const ProjectCard = ({ project, index, onDeleted }: ProjectCardProps) => {
           <Trash2Icon className="h-4 w-4" />
         </Button>
 
-        <Link to={`/project/${project.id}`} className="block h-full">
-          {project.thumbnail && (
+        {/* Edit button (new) */}
+        <EditProjectDialog 
+          project={currentProject} 
+          onProjectUpdated={handleProjectUpdated} 
+        />
+
+        <Link to={`/project/${currentProject.id}`} className="block h-full">
+          {currentProject.thumbnail && (
             <div className="relative h-48 w-full overflow-hidden">
               <div 
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out"
                 style={{ 
-                  backgroundImage: `url(${project.thumbnail})`,
+                  backgroundImage: `url(${currentProject.thumbnail})`,
                   transform: isHovered ? 'scale(1.05)' : 'scale(1)'
                 }}
               />
@@ -101,26 +117,38 @@ const ProjectCard = ({ project, index, onDeleted }: ProjectCardProps) => {
               
               <div className="absolute bottom-4 left-4 right-4">
                 <Badge 
-                  className={`${getStatusColor(project.status)} border-none`}
+                  className={`${getStatusColor(currentProject.status)} border-none`}
                   variant="outline"
                 >
-                  {project.status?.charAt(0).toUpperCase() + project.status?.slice(1) || 'No Status'}
+                  {currentProject.status?.charAt(0).toUpperCase() + currentProject.status?.slice(1) || 'No Status'}
                 </Badge>
               </div>
             </div>
           )}
           
-          <CardContent className={`p-6 ${!project.thumbnail ? 'pt-6' : 'pt-4'}`}>
-            <div className="space-y-3">
-              <h3 className="font-semibold text-xl line-clamp-1">{project.name}</h3>
-              <p className="text-muted-foreground text-sm line-clamp-2">{project.description}</p>
+          <CardContent className={`p-6 ${!currentProject.thumbnail ? 'pt-6' : 'pt-4'}`}>
+            <div className="flex items-start gap-3">
+              <Avatar className="h-12 w-12 rounded-full border border-border flex-shrink-0">
+                {currentProject.thumbnail ? (
+                  <AvatarImage src={currentProject.thumbnail} alt={currentProject.name} />
+                ) : (
+                  <AvatarFallback className="text-lg">
+                    {currentProject.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              
+              <div className="space-y-2">
+                <h3 className="font-semibold text-xl line-clamp-1">{currentProject.name}</h3>
+                <p className="text-muted-foreground text-sm line-clamp-2">{currentProject.description}</p>
+              </div>
             </div>
             
-            {project.integrations && project.integrations.length > 0 && (
+            {currentProject.integrations && currentProject.integrations.length > 0 && (
               <div className="mt-6">
                 <h4 className="text-xs font-medium text-muted-foreground mb-3">PLATAFORMAS CONECTADAS</h4>
                 <div className="flex flex-wrap gap-2">
-                  {project.integrations.map((integration: Integration) => (
+                  {currentProject.integrations.map((integration: Integration) => (
                     <IntegrationIcon key={integration.id} integration={integration} />
                   ))}
                 </div>
@@ -131,7 +159,7 @@ const ProjectCard = ({ project, index, onDeleted }: ProjectCardProps) => {
           <CardFooter className="px-6 pb-6 pt-0 flex justify-between items-center">
             <div className="flex items-center text-xs text-muted-foreground">
               <CalendarIcon className="h-3 w-3 mr-1" />
-              <span>Atualizado {formatDate(project.updated_at)}</span>
+              <span>Atualizado {formatDate(currentProject.updated_at)}</span>
             </div>
             
             <ArrowRightIcon 
@@ -146,7 +174,7 @@ const ProjectCard = ({ project, index, onDeleted }: ProjectCardProps) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir projeto</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o projeto "{project.name}"? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir o projeto "{currentProject.name}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

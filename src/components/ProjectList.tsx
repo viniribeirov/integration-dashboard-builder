@@ -9,9 +9,15 @@ interface ProjectListProps {
   projects: Project[];
   isLoading?: boolean;
   onProjectDeleted?: (id: string) => void;
+  onProjectUpdated?: (project: Project) => void;
 }
 
-const ProjectList = ({ projects, isLoading = false, onProjectDeleted }: ProjectListProps) => {
+const ProjectList = ({ 
+  projects, 
+  isLoading = false, 
+  onProjectDeleted,
+  onProjectUpdated
+}: ProjectListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   
@@ -117,6 +123,7 @@ const ProjectList = ({ projects, isLoading = false, onProjectDeleted }: ProjectL
               project={project} 
               index={index}
               onDeleted={onProjectDeleted}
+              onUpdated={onProjectUpdated}
             />
           ))}
         </div>

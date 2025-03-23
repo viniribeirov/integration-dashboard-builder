@@ -12,6 +12,7 @@ export const createProject = async (projectData: {
   description: string | null;
   status?: 'active' | 'inactive' | 'pending' | null;
   thumbnail?: string | null;
+  thumbnailFile?: File | null;
 }): Promise<Project | null> => {
   try {
     // Validar dados
@@ -28,12 +29,39 @@ export const createProject = async (projectData: {
       return null;
     }
     
+    const userId = session.user.id;
+    
+    let thumbnailUrl = projectData.thumbnail || null;
+    
+    // Upload da imagem se existir
+    if (projectData.thumbnailFile) {
+      const timestamp = new Date().getTime();
+      const filePath = `logos/${userId}/${timestamp}.jpg`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('project-assets')
+        .upload(filePath, projectData.thumbnailFile, {
+          cacheControl: '3600',
+          upsert: true
+        });
+      
+      if (uploadError) {
+        console.error('Erro ao fazer upload da imagem:', uploadError);
+      } else if (uploadData) {
+        const { data: urlData } = supabase.storage
+          .from('project-assets')
+          .getPublicUrl(uploadData.path);
+        
+        thumbnailUrl = urlData.publicUrl;
+      }
+    }
+    
     const newProject = {
       name: projectData.name,
       description: projectData.description || null,
-      user_id: session.user.id,
+      user_id: userId,
       status: projectData.status || 'active',
-      thumbnail: projectData.thumbnail || null
+      thumbnail: thumbnailUrl
     };
     
     // Insere o projeto no Supabase
@@ -68,7 +96,7 @@ export const createProject = async (projectData: {
  */
 export const updateProject = async (
   id: string, 
-  updates: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at' | 'integrations'>>
+  updates: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at' | 'integrations'>> & { thumbnailFile?: File | null }
 ): Promise<Project | null> => {
   try {
     // Verifica se ao menos um campo foi fornecido
@@ -77,12 +105,49 @@ export const updateProject = async (
       return null;
     }
     
+    // Obtém o usuário atual para o upload da imagem
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      console.error('Usuário não autenticado');
+      return null;
+    }
+    
+    const userId = session.user.id;
+    
+    // Cria uma cópia dos updates sem o campo thumbnailFile
+    const projectUpdates = { ...updates };
+    delete (projectUpdates as any).thumbnailFile;
+    
+    // Upload da imagem se existir
+    if (updates.thumbnailFile) {
+      const timestamp = new Date().getTime();
+      const filePath = `logos/${userId}/${timestamp}.jpg`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('project-assets')
+        .upload(filePath, updates.thumbnailFile, {
+          cacheControl: '3600',
+          upsert: true
+        });
+      
+      if (uploadError) {
+        console.error('Erro ao fazer upload da imagem:', uploadError);
+      } else if (uploadData) {
+        const { data: urlData } = supabase.storage
+          .from('project-assets')
+          .getPublicUrl(uploadData.path);
+        
+        projectUpdates.thumbnail = urlData.publicUrl;
+      }
+    }
+    
     // Atualiza o projeto no Supabase
     const { data, error } = await supabase
       .from('projects')
-      .update(updates)
+      .update(projectUpdates)
       .eq('id', id)
-      .select()
+      .select('*, integrations(*)')
       .single();
       
     if (error) {
@@ -95,12 +160,8 @@ export const updateProject = async (
       return null;
     }
     
-    // Formata o resultado para o tipo Project
-    return {
-      ...data,
-      integrations: [],
-      status: (data.status as 'active' | 'inactive' | 'pending' | null)
-    };
+    // Retorna o projeto atualizado
+    return data as unknown as Project;
   } catch (error) {
     console.error(`Erro ao atualizar projeto ${id}:`, error);
     return null;
