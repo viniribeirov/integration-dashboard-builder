@@ -6,3 +6,8 @@ verify_jwt = false
 [functions.facebook-sync-data]
 verify_jwt = false
 
+[functions.facebook-cron-sync]
+verify_jwt = false
+
+[functions.facebook-fill-missing]
+verify_jwt = false
