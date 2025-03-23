@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "../../integrations/supabase/client";
 import { ScrollArea } from "../ui/scroll-area";
 import { Input } from "../ui/input";
+import { format, subDays } from 'date-fns';
 
 interface AdAccount {
   id: string;
@@ -115,6 +116,9 @@ const FacebookAccountsModal = ({
         throw new Error(error.message);
       }
 
+      // After successful integration, sync data from Facebook
+      await syncFacebookData(account.accountId);
+
       toast.success('Conta do Facebook Ads conectada com sucesso!');
       onSuccess();
     } catch (err) {
@@ -122,6 +126,48 @@ const FacebookAccountsModal = ({
       toast.error('Falha ao conectar conta do Facebook Ads');
     } finally {
       setConnectingId(null);
+    }
+  };
+
+  const syncFacebookData = async (adAccountId: string) => {
+    try {
+      // Calculate date range (last 30 days)
+      const today = new Date();
+      const thirtyDaysAgo = subDays(today, 30);
+      
+      const dateRange = {
+        since: format(thirtyDaysAgo, 'yyyy-MM-dd'),
+        until: format(today, 'yyyy-MM-dd')
+      };
+
+      console.log(`Iniciando sincronização de dados do Facebook para conta ${adAccountId}`);
+      
+      const { data, error } = await supabase.functions.invoke('facebook-sync-data', {
+        method: 'POST',
+        body: {
+          project_id: projectId,
+          ad_account_id: adAccountId,
+          date_range: dateRange
+        }
+      });
+
+      if (error) {
+        console.error('Error calling facebook-sync-data:', error);
+        toast.error('Conectado, mas falha ao sincronizar dados. Tente sincronizar manualmente.');
+        return;
+      }
+
+      if (data.error) {
+        console.error('Error in facebook-sync-data response:', data.error);
+        toast.error('Conectado, mas falha ao sincronizar dados. Tente sincronizar manualmente.');
+        return;
+      }
+
+      console.log('Sincronização inicial de dados concluída:', data);
+      toast.success('Dados iniciais sincronizados com sucesso!');
+    } catch (err) {
+      console.error('Unexpected error during data sync:', err);
+      toast.error('Conectado, mas falha ao sincronizar dados. Tente sincronizar manualmente.');
     }
   };
 
