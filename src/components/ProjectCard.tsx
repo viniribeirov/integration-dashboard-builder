@@ -1,14 +1,26 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarIcon, ArrowRightIcon } from 'lucide-react';
+import { CalendarIcon, ArrowRightIcon, Trash2Icon } from 'lucide-react';
 import { Project, Integration } from '../types';
-import { getPlatformColor, getStatusColor } from '../services/mockData';
+import { getPlatformColor, getStatusColor, formatDate } from '../utils/projectUtils';
 import { useInView } from '../utils/animations';
-import { format } from 'date-fns';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { Card, CardContent, CardFooter } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { toast } from 'sonner';
+import { deleteProject } from '../supabase/mutations/projects';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
 
 interface ProjectCardProps {
   project: Project;
@@ -19,13 +31,30 @@ interface ProjectCardProps {
 const ProjectCard = ({ project, index, onDeleted }: ProjectCardProps) => {
   const { ref, isInView } = useInView();
   const [isHovered, setIsHovered] = useState(false);
-  
-  // Format date for display
-  const formatDate = (dateString: string) => {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!project.id) return;
+    
     try {
-      return format(new Date(dateString), 'MMM d, yyyy');
+      setIsDeleting(true);
+      const success = await deleteProject(project.id);
+      
+      if (success) {
+        toast.success("Projeto excluído com sucesso");
+        if (onDeleted) {
+          onDeleted(project.id);
+        }
+      } else {
+        toast.error("Erro ao excluir projeto");
+      }
     } catch (error) {
-      return 'Invalid date';
+      console.error("Erro ao excluir projeto:", error);
+      toast.error("Erro ao excluir projeto");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -38,12 +67,27 @@ const ProjectCard = ({ project, index, onDeleted }: ProjectCardProps) => {
         transition: `all 0.5s ease-out ${index * 0.1}s`
       }}
     >
-      <Link to={`/project/${project.id}`}>
-        <Card 
-          className="overflow-hidden h-full border border-border transition-all duration-300 hover:shadow-md"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+      <Card 
+        className="overflow-hidden h-full border border-border transition-all duration-300 hover:shadow-md relative"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Delete button */}
+        <Button
+          variant="destructive"
+          size="icon"
+          className="absolute top-2 right-2 z-10 opacity-0 transition-opacity duration-200 hover:bg-red-600"
+          style={{ opacity: isHovered ? 0.9 : 0 }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowDeleteDialog(true);
+          }}
         >
+          <Trash2Icon className="h-4 w-4" />
+        </Button>
+
+        <Link to={`/project/${project.id}`} className="block h-full">
           {project.thumbnail && (
             <div className="relative h-48 w-full overflow-hidden">
               <div 
@@ -94,15 +138,35 @@ const ProjectCard = ({ project, index, onDeleted }: ProjectCardProps) => {
               className={`h-4 w-4 transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`}
             />
           </CardFooter>
-        </Card>
-      </Link>
+        </Link>
+      </Card>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir projeto</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o projeto "{project.name}"? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete} 
+              disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {isDeleting ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
 
 const IntegrationIcon = ({ integration }: { integration: Integration }) => {
   const platformColor = getPlatformColor(integration.platform);
-  const statusColor = getStatusColor(integration.status);
   
   // Get platform letter for avatar
   const getPlatformLetter = () => {

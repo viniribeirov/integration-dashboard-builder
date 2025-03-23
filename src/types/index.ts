@@ -10,13 +10,13 @@ export type User = {
 export type Project = {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   created_at: string;
   updated_at: string;
   integrations: Integration[];
   status: 'active' | 'inactive' | 'pending' | null;
   user_id: string;
-  thumbnail?: string;
+  thumbnail?: string | null;
 };
 
 export type Integration = {

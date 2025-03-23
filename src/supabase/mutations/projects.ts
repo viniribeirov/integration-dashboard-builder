@@ -9,9 +9,9 @@ import { Project } from '../../types';
  */
 export const createProject = async (projectData: {
   name: string;
-  description: string;
+  description: string | null;
   status?: 'active' | 'inactive' | 'pending' | null;
-  thumbnail?: string;
+  thumbnail?: string | null;
 }): Promise<Project | null> => {
   try {
     // Validar dados
@@ -30,10 +30,10 @@ export const createProject = async (projectData: {
     
     const newProject = {
       name: projectData.name,
-      description: projectData.description,
+      description: projectData.description || null,
       user_id: session.user.id,
       status: projectData.status || 'active',
-      thumbnail: projectData.thumbnail
+      thumbnail: projectData.thumbnail || null
     };
     
     // Insere o projeto no Supabase
@@ -68,22 +68,19 @@ export const createProject = async (projectData: {
  */
 export const updateProject = async (
   id: string, 
-  updates: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at'>>
+  updates: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at' | 'integrations'>>
 ): Promise<Project | null> => {
   try {
-    // Formata as atualizações para a estrutura do banco
-    const projectUpdates = {
-      ...updates,
-      // Remove campos que não existem na tabela
-      integrations: undefined
-    };
-    
-    delete projectUpdates.integrations;
+    // Verifica se ao menos um campo foi fornecido
+    if (Object.keys(updates).length === 0) {
+      console.error('Nenhum campo fornecido para atualização');
+      return null;
+    }
     
     // Atualiza o projeto no Supabase
     const { data, error } = await supabase
       .from('projects')
-      .update(projectUpdates)
+      .update(updates)
       .eq('id', id)
       .select()
       .single();

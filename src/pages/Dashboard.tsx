@@ -16,23 +16,27 @@ const Dashboard = () => {
   const { user } = useAuth();
   const hasAnimated = useOnceAnimation(100);
 
-  useEffect(() => {
-    // Usamos a função de query para buscar os projetos
-    const fetchProjects = async () => {
-      try {
-        setIsLoading(true);
-        const projectsData = await getProjects();
-        setProjects(projectsData);
-      } catch (error) {
-        console.error('Error fetching projects:', error);
-        toast.error('Falha ao carregar projetos');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchProjects = async () => {
+    try {
+      setIsLoading(true);
+      const projectsData = await getProjects();
+      setProjects(projectsData);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      toast.error('Falha ao carregar projetos');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchProjects();
-  }, []);
+  useEffect(() => {
+    if (user) {
+      fetchProjects();
+    } else {
+      setIsLoading(false);
+      setProjects([]);
+    }
+  }, [user]);
 
   return (
     <AuthLayout>
@@ -44,13 +48,13 @@ const Dashboard = () => {
           <div className="flex items-center text-sm text-muted-foreground mb-1">
             <span>Dashboard</span>
             <ChevronRightIcon className="h-4 w-4 mx-1" />
-            <span>Projects</span>
+            <span>Projetos</span>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sticky top-0 z-10">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
+              <h1 className="text-3xl font-bold tracking-tight">Projetos</h1>
               <p className="text-muted-foreground mt-1">
-                Manage your integration projects and connected platforms.
+                Gerencie seus projetos de integração e plataformas conectadas.
               </p>
             </div>
             <CreateProjectButton onProjectCreated={(newProject) => {
@@ -63,19 +67,14 @@ const Dashboard = () => {
         </div>
 
         {/* Project List */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-32">
-            <div className="h-8 w-8 rounded-full border-4 border-primary border-r-transparent animate-spin" />
-          </div>
-        ) : (
-          <ProjectList 
-            projects={projects} 
-            onProjectDeleted={(id) => {
-              setProjects(prev => prev.filter(p => p.id !== id));
-              toast.success('Projeto removido com sucesso!');
-            }}
-          />
-        )}
+        <ProjectList 
+          projects={projects}
+          isLoading={isLoading}
+          onProjectDeleted={(id) => {
+            setProjects(prev => prev.filter(p => p.id !== id));
+            toast.success('Projeto removido com sucesso!');
+          }}
+        />
       </div>
     </AuthLayout>
   );

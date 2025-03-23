@@ -3,13 +3,15 @@ import { useState } from 'react';
 import { Project } from '../types';
 import ProjectCard from './ProjectCard';
 import { useStaggeredAnimation } from '../utils/animations';
+import { Search } from 'lucide-react';
 
 interface ProjectListProps {
   projects: Project[];
+  isLoading?: boolean;
   onProjectDeleted?: (id: string) => void;
 }
 
-const ProjectList = ({ projects, onProjectDeleted }: ProjectListProps) => {
+const ProjectList = ({ projects, isLoading = false, onProjectDeleted }: ProjectListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   
@@ -17,7 +19,7 @@ const ProjectList = ({ projects, onProjectDeleted }: ProjectListProps) => {
   const filteredProjects = projects.filter(project => {
     const matchesSearch = 
       project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description?.toLowerCase().includes(searchQuery.toLowerCase() || '');
+      (project.description?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
     
     const matchesStatus = statusFilter ? project.status === statusFilter : true;
     
@@ -27,16 +29,27 @@ const ProjectList = ({ projects, onProjectDeleted }: ProjectListProps) => {
   // Generate delays for staggered animations
   const animationDelays = useStaggeredAnimation(filteredProjects.length);
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <div className="h-8 w-8 rounded-full border-4 border-primary border-r-transparent animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
         <div className="relative">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <Search className="h-4 w-4" />
+          </div>
           <input
             type="text"
-            placeholder="Search projects..."
+            placeholder="Buscar projetos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full md:w-64 pl-3 pr-10 py-2 border border-input rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+            className="w-full md:w-64 pl-9 pr-4 py-2 border border-input rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
         
@@ -49,7 +62,7 @@ const ProjectList = ({ projects, onProjectDeleted }: ProjectListProps) => {
                 : 'bg-secondary hover:bg-secondary/80'
             }`}
           >
-            All
+            Todos
           </button>
           <button
             onClick={() => setStatusFilter('active')}
@@ -59,7 +72,7 @@ const ProjectList = ({ projects, onProjectDeleted }: ProjectListProps) => {
                 : 'bg-secondary hover:bg-secondary/80'
             }`}
           >
-            Active
+            Ativos
           </button>
           <button
             onClick={() => setStatusFilter('pending')}
@@ -69,7 +82,7 @@ const ProjectList = ({ projects, onProjectDeleted }: ProjectListProps) => {
                 : 'bg-secondary hover:bg-secondary/80'
             }`}
           >
-            Pending
+            Pendentes
           </button>
           <button
             onClick={() => setStatusFilter('inactive')}
@@ -79,7 +92,7 @@ const ProjectList = ({ projects, onProjectDeleted }: ProjectListProps) => {
                 : 'bg-secondary hover:bg-secondary/80'
             }`}
           >
-            Inactive
+            Inativos
           </button>
         </div>
       </div>

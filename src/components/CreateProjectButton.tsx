@@ -41,11 +41,10 @@ const CreateProjectButton = ({ onProjectCreated }: CreateProjectButtonProps) => 
       // Usamos a função de mutation para criar o projeto
       const newProject = await createProject({
         name: projectName,
-        description: projectDescription
+        description: projectDescription || null
       });
       
       if (newProject) {
-        toast.success(`Projeto "${newProject.name}" criado com sucesso!`);
         setOpen(false);
         
         // Chamamos o callback se existir

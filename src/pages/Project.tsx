@@ -1,21 +1,22 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeftIcon, ClockIcon, CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { ChevronLeftIcon, ClockIcon, CalendarIcon, Settings, PlusIcon } from 'lucide-react';
 import AuthLayout from '../components/AuthLayout';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
 import { Badge } from '../components/ui/badge';
 import { Integration, Project as ProjectType } from '../types';
-import { getStatusColor, getPlatformColor } from '../services/mockData';
-import { getProjectById } from '../supabase/queries/projects';
+import { getStatusColor, getPlatformColor, formatDate } from '../utils/projectUtils';
+import { getProjectById, getProjectIntegrations } from '../supabase/queries/projects';
 import { useOnceAnimation } from '../utils/animations';
+import { toast } from 'sonner';
 
 const Project = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [project, setProject] = useState<ProjectType | null>(null);
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const hasAnimated = useOnceAnimation(100);
 
@@ -28,13 +29,19 @@ const Project = () => {
         const projectData = await getProjectById(id);
         
         if (!projectData) {
+          toast.error('Projeto não encontrado');
           navigate('/dashboard');
           return;
         }
         
         setProject(projectData);
+        
+        // Fetch integrations
+        const integrationsData = await getProjectIntegrations(id);
+        setIntegrations(integrationsData);
       } catch (error) {
         console.error(`Error fetching project ${id}:`, error);
+        toast.error('Erro ao carregar projeto');
         navigate('/dashboard');
       } finally {
         setIsLoading(false);
@@ -43,14 +50,6 @@ const Project = () => {
 
     fetchProject();
   }, [id, navigate]);
-
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'MMM d, yyyy');
-    } catch (error) {
-      return 'Invalid date';
-    }
-  };
 
   if (isLoading) {
     return (
@@ -63,7 +62,22 @@ const Project = () => {
   }
 
   if (!project) {
-    return null;
+    return (
+      <AuthLayout>
+        <div className="flex flex-col items-center justify-center py-32 text-center">
+          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+            <span className="text-2xl">🔍</span>
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Projeto não encontrado</h2>
+          <p className="text-muted-foreground mb-6">
+            O projeto que você está procurando não existe ou foi removido.
+          </p>
+          <Button onClick={() => navigate('/dashboard')}>
+            Voltar para a Dashboard
+          </Button>
+        </div>
+      </AuthLayout>
+    );
   }
 
   return (
@@ -79,7 +93,7 @@ const Project = () => {
           onClick={() => navigate('/dashboard')}
         >
           <ChevronLeftIcon className="h-4 w-4 mr-1" />
-          Back to Projects
+          Voltar para Projetos
         </Button>
 
         {/* Project header */}
@@ -88,7 +102,7 @@ const Project = () => {
             <div className="flex items-center gap-2">
               <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
               <Badge className={`${getStatusColor(project.status)} bg-transparent`}>
-                {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                {project.status?.charAt(0).toUpperCase() + project.status?.slice(1) || 'Sem Status'}
               </Badge>
             </div>
             <p className="text-muted-foreground mt-1">{project.description}</p>
@@ -97,30 +111,36 @@ const Project = () => {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <div className="flex items-center">
               <CalendarIcon className="h-4 w-4 mr-1" />
-              <span>Created: {formatDate(project.created_at)}</span>
+              <span>Criado: {formatDate(project.created_at)}</span>
             </div>
             <div className="flex items-center ml-4">
               <ClockIcon className="h-4 w-4 mr-1" />
-              <span>Updated: {formatDate(project.updated_at)}</span>
+              <span>Atualizado: {formatDate(project.updated_at)}</span>
             </div>
           </div>
         </div>
 
         {/* Integrations section */}
         <div className="bg-card rounded-lg border shadow-sm p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Integrations</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Integrações</h2>
+            <Button size="sm">
+              <PlusIcon className="h-4 w-4 mr-1" />
+              Conectar Nova Plataforma
+            </Button>
+          </div>
           <Separator className="mb-6" />
 
-          {project.integrations.length === 0 ? (
+          {integrations.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">No integrations connected yet.</p>
+              <p className="text-muted-foreground">Nenhuma integração conectada ainda.</p>
               <Button className="mt-4">
-                Connect New Integration
+                Conectar Nova Integração
               </Button>
             </div>
           ) : (
             <div className="grid gap-4">
-              {project.integrations.map((integration: Integration) => (
+              {integrations.map((integration: Integration) => (
                 <div
                   key={integration.id}
                   className="flex items-center justify-between p-4 bg-background rounded-md border"
@@ -132,7 +152,7 @@ const Project = () => {
                     <div>
                       <p className="font-medium">{integration.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {integration.account_name || 'No account name'}
+                        {integration.account_name || 'Sem nome de conta'}
                       </p>
                     </div>
                   </div>
@@ -141,7 +161,8 @@ const Project = () => {
                       {integration.status.charAt(0).toUpperCase() + integration.status.slice(1)}
                     </span>
                     <Button variant="ghost" size="sm" className="ml-2">
-                      Settings
+                      <Settings className="h-4 w-4 mr-1" />
+                      Configurações
                     </Button>
                   </div>
                 </div>
@@ -152,10 +173,10 @@ const Project = () => {
 
         {/* Analytics section placeholder */}
         <div className="bg-card rounded-lg border shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Analytics Overview</h2>
+          <h2 className="text-xl font-semibold mb-4">Visão Geral</h2>
           <Separator className="mb-6" />
           <div className="flex items-center justify-center py-16 border border-dashed rounded-md">
-            <p className="text-muted-foreground">Analytics will be displayed here</p>
+            <p className="text-muted-foreground">Análises serão exibidas aqui</p>
           </div>
         </div>
       </div>

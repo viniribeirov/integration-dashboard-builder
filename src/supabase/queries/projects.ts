@@ -1,6 +1,5 @@
 
 import { supabase } from '../../integrations/supabase/client';
-import { mockProjects } from '../../services/mockData';
 import { Project } from '../../types';
 
 /**
@@ -13,8 +12,8 @@ export const getProjects = async (): Promise<Project[]> => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
-      console.warn('Usuário não autenticado, retornando dados mockados');
-      return mockProjects;
+      console.warn('Usuário não autenticado');
+      return [];
     }
     
     const userId = session.user.id;
@@ -28,12 +27,7 @@ export const getProjects = async (): Promise<Project[]> => {
       
     if (error) {
       console.error('Erro ao buscar projetos:', error);
-      return mockProjects;
-    }
-    
-    if (!data || data.length === 0) {
-      console.info('Nenhum projeto encontrado, retornando dados mockados');
-      return mockProjects;
+      return [];
     }
     
     // Formatar para o tipo Project
@@ -41,11 +35,11 @@ export const getProjects = async (): Promise<Project[]> => {
       ...project,
       integrations: [],
       // Garantir que o status seja um dos tipos permitidos
-      status: (project.status as 'active' | 'inactive' | 'pending' | null) || 'active'
+      status: (project.status as 'active' | 'inactive' | 'pending' | null) || null
     }));
   } catch (error) {
     console.error('Erro ao buscar projetos:', error);
-    return mockProjects;
+    return [];
   }
 };
 
@@ -56,24 +50,21 @@ export const getProjects = async (): Promise<Project[]> => {
  */
 export const getProjectById = async (id: string): Promise<Project | null> => {
   try {
-    // Tenta buscar do Supabase primeiro
+    // Busca projeto no Supabase
     const { data, error } = await supabase
       .from('projects')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
       
     if (error) {
-      console.warn(`Erro ao buscar projeto ${id} do Supabase:`, error);
-      // Fallback para dados mockados
-      const project = mockProjects.find(project => project.id === id);
-      return project || null;
+      console.error(`Erro ao buscar projeto ${id} do Supabase:`, error);
+      return null;
     }
     
     if (!data) {
-      console.warn(`Projeto ${id} não encontrado no Supabase, buscando em mockados`);
-      const project = mockProjects.find(project => project.id === id);
-      return project || null;
+      console.warn(`Projeto ${id} não encontrado no Supabase`);
+      return null;
     }
     
     // Formatar para o tipo Project
@@ -81,12 +72,34 @@ export const getProjectById = async (id: string): Promise<Project | null> => {
       ...data,
       integrations: [],
       // Garantir que o status seja um dos tipos permitidos
-      status: (data.status as 'active' | 'inactive' | 'pending' | null) || 'active'
+      status: (data.status as 'active' | 'inactive' | 'pending' | null) || null
     };
   } catch (error) {
     console.error(`Erro ao buscar projeto ${id}:`, error);
-    // Fallback para dados mockados
-    const project = mockProjects.find(project => project.id === id);
-    return project || null;
+    return null;
+  }
+};
+
+/**
+ * Busca as integrações de um projeto específico
+ * @param projectId ID do projeto
+ * @returns Lista de integrações
+ */
+export const getProjectIntegrations = async (projectId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('integrations')
+      .select('*')
+      .eq('project_id', projectId);
+      
+    if (error) {
+      console.error(`Erro ao buscar integrações do projeto ${projectId}:`, error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error(`Erro ao buscar integrações do projeto ${projectId}:`, error);
+    return [];
   }
 };
