@@ -10,17 +10,24 @@ import { Project } from '../../types';
 export const createProject = async (projectData: {
   name: string;
   description: string;
-  status?: 'active' | 'inactive' | 'pending';
+  logo_url?: string;
+  website_url?: string;
 }): Promise<Project | null> => {
   try {
-    // Por enquanto apenas simulamos a criação
-    // Em uma implementação futura, usaremos o cliente Supabase:
+    // Verificamos se o usuário está autenticado
+    const { data: { user } } = await supabase.auth.getUser();
     
-    /*
+    if (!user) {
+      console.error('Usuário não autenticado');
+      return null;
+    }
+    
     const newProject = {
-      ...projectData,
-      owner_id: user.id,
-      status: projectData.status || 'active'
+      name: projectData.name,
+      description: projectData.description,
+      logo_url: projectData.logo_url,
+      website_url: projectData.website_url,
+      user_id: user.id
     };
     
     const { data, error } = await supabase
@@ -29,28 +36,25 @@ export const createProject = async (projectData: {
       .select('*')
       .single();
       
-    if (error) throw error;
-    return data;
-    */
+    if (error) {
+      console.error('Erro ao criar projeto:', error);
+      return null;
+    }
     
-    // Simulação de criação
-    const newId = Math.random().toString(36).substring(2, 11);
-    const now = new Date().toISOString();
-    
-    const mockProject: Project = {
-      id: newId,
-      name: projectData.name,
-      description: projectData.description,
-      created_at: now,
-      updated_at: now,
-      integrations: [],
-      status: projectData.status || 'active',
-      owner_id: 'user-1', // ID fixo para mock
-      thumbnail: 'https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=2006&auto=format&fit=crop'
+    // Adaptar formato para corresponder ao tipo Project
+    const project: Project = {
+      id: data.id,
+      name: data.name,
+      description: data.description || '',
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      integrations: [], // Por enquanto não temos integrações
+      status: 'active', // Por padrão todos projetos são ativos
+      owner_id: data.user_id,
+      thumbnail: data.logo_url // Usamos logo_url como thumbnail por enquanto
     };
     
-    console.log('Projeto simulado criado:', mockProject);
-    return mockProject;
+    return project;
   } catch (error) {
     console.error('Erro ao criar projeto:', error);
     return null;
@@ -65,36 +69,41 @@ export const createProject = async (projectData: {
  */
 export const updateProject = async (
   id: string, 
-  updates: Partial<Omit<Project, 'id' | 'created_at' | 'owner_id'>>
+  updates: Partial<{
+    name: string;
+    description: string;
+    logo_url: string;
+    website_url: string;
+    status: 'active' | 'inactive' | 'pending';
+  }>
 ): Promise<Project | null> => {
   try {
-    // Em uma implementação futura, usaremos o cliente Supabase:
-    
-    /*
     const { data, error } = await supabase
       .from('projects')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update(updates)
       .eq('id', id)
-      .select('*, integrations(*)')
+      .select('*')
       .single();
       
-    if (error) throw error;
-    return data;
-    */
+    if (error) {
+      console.error(`Erro ao atualizar projeto ${id}:`, error);
+      return null;
+    }
     
-    // Simulação de atualização
-    console.log(`Simulação: projeto ${id} atualizado com`, updates);
-    return {
-      id,
-      name: updates.name || 'Projeto Atualizado',
-      description: updates.description || 'Descrição atualizada',
-      created_at: '2023-01-01T00:00:00Z',
-      updated_at: new Date().toISOString(),
-      integrations: [],
-      status: updates.status || 'active',
-      owner_id: 'user-1',
-      thumbnail: updates.thumbnail
+    // Adaptar formato para corresponder ao tipo Project
+    const project: Project = {
+      id: data.id,
+      name: data.name,
+      description: data.description || '',
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      integrations: [], // Por enquanto não temos integrações
+      status: 'active', // Definimos como active por padrão
+      owner_id: data.user_id,
+      thumbnail: data.logo_url // Usamos logo_url como thumbnail por enquanto
     };
+    
+    return project;
   } catch (error) {
     console.error(`Erro ao atualizar projeto ${id}:`, error);
     return null;
