@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarIcon, ArrowRightIcon, Trash2Icon } from 'lucide-react';
@@ -82,7 +81,6 @@ const ProjectCard = ({ project, index, onDeleted, onUpdated }: ProjectCardProps)
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Delete button */}
         <Button
           variant="destructive"
           size="icon"
@@ -97,36 +95,13 @@ const ProjectCard = ({ project, index, onDeleted, onUpdated }: ProjectCardProps)
           <Trash2Icon className="h-4 w-4" />
         </Button>
 
-        {/* Edit button (new) */}
         <EditProjectDialog 
           project={currentProject} 
           onProjectUpdated={handleProjectUpdated} 
         />
 
         <Link to={`/project/${currentProject.id}`} className="block h-full">
-          {currentProject.thumbnail && (
-            <div className="relative h-48 w-full overflow-hidden">
-              <div 
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out"
-                style={{ 
-                  backgroundImage: `url(${currentProject.thumbnail})`,
-                  transform: isHovered ? 'scale(1.05)' : 'scale(1)'
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent" />
-              
-              <div className="absolute bottom-4 left-4 right-4">
-                <Badge 
-                  className={`${getStatusColor(currentProject.status)} border-none`}
-                  variant="outline"
-                >
-                  {currentProject.status?.charAt(0).toUpperCase() + currentProject.status?.slice(1) || 'No Status'}
-                </Badge>
-              </div>
-            </div>
-          )}
-          
-          <CardContent className={`p-6 ${!currentProject.thumbnail ? 'pt-6' : 'pt-4'}`}>
+          <CardContent className="p-6">
             <div className="flex items-start gap-3">
               <Avatar className="h-12 w-12 rounded-full border border-border flex-shrink-0">
                 {currentProject.thumbnail ? (
@@ -142,6 +117,15 @@ const ProjectCard = ({ project, index, onDeleted, onUpdated }: ProjectCardProps)
                 <h3 className="font-semibold text-xl line-clamp-1">{currentProject.name}</h3>
                 <p className="text-muted-foreground text-sm line-clamp-2">{currentProject.description}</p>
               </div>
+            </div>
+            
+            <div className="mt-4">
+              <Badge 
+                className={`${getStatusColor(currentProject.status)} border-none`}
+                variant="outline"
+              >
+                {currentProject.status?.charAt(0).toUpperCase() + currentProject.status?.slice(1) || 'No Status'}
+              </Badge>
             </div>
             
             {currentProject.integrations && currentProject.integrations.length > 0 && (
@@ -196,7 +180,6 @@ const ProjectCard = ({ project, index, onDeleted, onUpdated }: ProjectCardProps)
 const IntegrationIcon = ({ integration }: { integration: Integration }) => {
   const platformColor = getPlatformColor(integration.platform);
   
-  // Get platform letter for avatar
   const getPlatformLetter = () => {
     return integration.platform.charAt(0).toUpperCase();
   };
