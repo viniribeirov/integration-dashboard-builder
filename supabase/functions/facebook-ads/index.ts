@@ -26,6 +26,8 @@ interface ResponseData {
 }
 
 serve(async (req) => {
+  console.log("Função facebook-ads foi chamada:", req.method, req.url);
+  
   // Handle CORS
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -34,21 +36,30 @@ serve(async (req) => {
   try {
     // Get request body as JSON
     let requestData;
-    if (req.method === "POST") {
-      requestData = await req.json();
-    } else if (req.method === "GET") {
-      // For GET requests, try to parse URL parameters
-      const url = new URL(req.url);
-      const params = Object.fromEntries(url.searchParams.entries());
-      requestData = params;
+    try {
+      if (req.method === "POST") {
+        requestData = await req.json();
+        console.log("POST data recebido:", requestData);
+      } else if (req.method === "GET") {
+        // For GET requests, try to parse URL parameters
+        const url = new URL(req.url);
+        const params = Object.fromEntries(url.searchParams.entries());
+        requestData = params;
+        console.log("GET params recebidos:", requestData);
+      }
+    } catch (parseError) {
+      console.error("Erro ao parsear request:", parseError);
+      requestData = {};
     }
 
     // Use the endpoint from the request data
     const endpoint = requestData?.endpoint;
+    console.log("Endpoint solicitado:", endpoint);
 
     // Get the Facebook permanent token from Edge Function secrets
     const token = Deno.env.get("FACEBOOK_PERMANENT_TOKEN");
     if (!token) {
+      console.error("FACEBOOK_PERMANENT_TOKEN não está configurado");
       return new Response(
         JSON.stringify({ error: "Token não configurado" }),
         { 
@@ -58,13 +69,18 @@ serve(async (req) => {
       );
     }
 
-    if (endpoint === "get-ad-accounts") {
-      // Fetch ad accounts from Facebook API
-      const response = await fetch(
-        `${FACEBOOK_API_BASE_URL}/me/adaccounts?fields=name,account_id,account_status,currency,business_name&access_token=${token}`,
-        { method: "GET" }
-      );
+    console.log("Token encontrado, tamanho:", token.length);
 
+    if (endpoint === "get-ad-accounts") {
+      console.log("Buscando contas de anúncios...");
+      // Fetch ad accounts from Facebook API
+      const apiUrl = `${FACEBOOK_API_BASE_URL}/me/adaccounts?fields=name,account_id,account_status,currency,business_name&access_token=${token}`;
+      console.log("URL da API:", apiUrl);
+      
+      const response = await fetch(apiUrl, { method: "GET" });
+
+      console.log("Status da resposta Facebook:", response.status);
+      
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Facebook API error:", errorData);
@@ -81,6 +97,7 @@ serve(async (req) => {
       }
 
       const data: ResponseData = await response.json();
+      console.log("Dados recebidos do Facebook:", JSON.stringify(data).substring(0, 200) + "...");
       
       // Format the ad accounts data
       const formattedAccounts = data.data.map(account => ({
@@ -91,6 +108,8 @@ serve(async (req) => {
         currency: account.currency
       }));
 
+      console.log("Contas formatadas:", formattedAccounts.length, "contas encontradas");
+      
       return new Response(
         JSON.stringify({ accounts: formattedAccounts }),
         { 

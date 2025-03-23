@@ -46,11 +46,15 @@ const FacebookAccountsModal = ({
     setError(null);
     
     try {
-      // Fix: Pass parameters in the correct format for Supabase Edge Functions
+      console.log("Iniciando chamada para a função facebook-ads");
+      
+      // Corrigindo o formato da chamada da Edge Function
       const { data, error } = await supabase.functions.invoke('facebook-ads', {
-        method: 'GET',
+        method: 'POST',
         body: { endpoint: 'get-ad-accounts' }
       });
+
+      console.log("Resposta da função facebook-ads:", data, error);
 
       if (error) {
         throw new Error(error.message);
