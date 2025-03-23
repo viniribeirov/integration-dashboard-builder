@@ -15,47 +15,46 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
 import { createProject } from '../supabase/mutations/projects';
-import { useQueryClient } from '@tanstack/react-query';
 
 const CreateProjectButton = () => {
   const [open, setOpen] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!projectName.trim()) {
-      toast.error('Por favor, insira um nome para o projeto');
+      toast.error('Please enter a project name');
       return;
     }
     
     try {
       setIsLoading(true);
       
+      // Usamos a função de mutation para criar o projeto
       const newProject = await createProject({
         name: projectName,
         description: projectDescription
       });
       
       if (newProject) {
-        toast.success('Projeto criado com sucesso');
+        toast.success('Project created successfully');
         setOpen(false);
         
-        // Invalidar a query para forçar recarregamento da lista de projetos
-        queryClient.invalidateQueries({ queryKey: ['projects'] });
+        // Opcionalmente, recarregar a lista de projetos ou redirecionar
+        // Isso será implementado adequadamente quando conectarmos ao Supabase real
       } else {
-        toast.error('Falha ao criar projeto');
+        toast.error('Failed to create project');
       }
       
       // Reset form
       setProjectName('');
       setProjectDescription('');
     } catch (error) {
-      console.error('Erro ao criar projeto:', error);
-      toast.error('Falha ao criar projeto');
+      console.error('Error creating project:', error);
+      toast.error('Failed to create project');
     } finally {
       setIsLoading(false);
     }
@@ -68,25 +67,25 @@ const CreateProjectButton = () => {
         className="shadow-sm hover:shadow"
       >
         <PlusIcon className="h-4 w-4 mr-2" />
-        Novo Projeto
+        New Project
       </Button>
       
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>Criar Novo Projeto</DialogTitle>
+            <DialogTitle>Create New Project</DialogTitle>
             <DialogDescription>
-              Adicione os detalhes para seu novo projeto de integração.
+              Add the details for your new integration project.
             </DialogDescription>
           </DialogHeader>
           
           <form onSubmit={handleSubmit}>
             <div className="grid gap-6 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome do Projeto</Label>
+                <Label htmlFor="name">Project Name</Label>
                 <Input
                   id="name"
-                  placeholder="Digite o nome do projeto"
+                  placeholder="Enter project name"
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   className="w-full"
@@ -94,10 +93,10 @@ const CreateProjectButton = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
+                <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
-                  placeholder="Para que serve este projeto?"
+                  placeholder="What is this project for?"
                   value={projectDescription}
                   onChange={(e) => setProjectDescription(e.target.value)}
                   className="w-full min-h-[100px]"
@@ -112,14 +111,14 @@ const CreateProjectButton = () => {
                 onClick={() => setOpen(false)}
                 disabled={isLoading}
               >
-                Cancelar
+                Cancel
               </Button>
               <Button 
                 type="submit"
                 disabled={isLoading}
                 className={isLoading ? 'opacity-70 cursor-not-allowed' : ''}
               >
-                {isLoading ? 'Criando...' : 'Criar Projeto'}
+                {isLoading ? 'Creating...' : 'Create Project'}
               </Button>
             </DialogFooter>
           </form>
