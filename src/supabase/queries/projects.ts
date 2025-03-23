@@ -1,6 +1,6 @@
 
 import { supabase } from '../../integrations/supabase/client';
-import { Project } from '../../types';
+import { Project, Integration } from '../../types';
 
 /**
  * Busca todos os projetos do usuário atual
@@ -18,10 +18,10 @@ export const getProjects = async (): Promise<Project[]> => {
     
     const userId = session.user.id;
     
-    // Busca projetos do usuário autenticado no Supabase
+    // Busca projetos do usuário autenticado no Supabase com suas integrações
     const { data, error } = await supabase
       .from('projects')
-      .select('*')
+      .select('*, integrations(*)')
       .eq('user_id', userId)
       .order('updated_at', { ascending: false });
       
@@ -30,13 +30,8 @@ export const getProjects = async (): Promise<Project[]> => {
       return [];
     }
     
-    // Formatar para o tipo Project
-    return data.map(project => ({
-      ...project,
-      integrations: [],
-      // Garantir que o status seja um dos tipos permitidos
-      status: (project.status as 'active' | 'inactive' | 'pending' | null) || null
-    }));
+    // Retorna os projetos com suas integrações
+    return data as Project[];
   } catch (error) {
     console.error('Erro ao buscar projetos:', error);
     return [];
@@ -50,30 +45,19 @@ export const getProjects = async (): Promise<Project[]> => {
  */
 export const getProjectById = async (id: string): Promise<Project | null> => {
   try {
-    // Busca projeto no Supabase
+    // Busca projeto com suas integrações no Supabase
     const { data, error } = await supabase
       .from('projects')
-      .select('*')
+      .select('*, integrations(*)')
       .eq('id', id)
-      .maybeSingle();
+      .single();
       
     if (error) {
       console.error(`Erro ao buscar projeto ${id} do Supabase:`, error);
       return null;
     }
     
-    if (!data) {
-      console.warn(`Projeto ${id} não encontrado no Supabase`);
-      return null;
-    }
-    
-    // Formatar para o tipo Project
-    return {
-      ...data,
-      integrations: [],
-      // Garantir que o status seja um dos tipos permitidos
-      status: (data.status as 'active' | 'inactive' | 'pending' | null) || null
-    };
+    return data as Project;
   } catch (error) {
     console.error(`Erro ao buscar projeto ${id}:`, error);
     return null;
@@ -85,7 +69,7 @@ export const getProjectById = async (id: string): Promise<Project | null> => {
  * @param projectId ID do projeto
  * @returns Lista de integrações
  */
-export const getProjectIntegrations = async (projectId: string) => {
+export const getProjectIntegrations = async (projectId: string): Promise<Integration[]> => {
   try {
     const { data, error } = await supabase
       .from('integrations')
@@ -97,7 +81,7 @@ export const getProjectIntegrations = async (projectId: string) => {
       return [];
     }
     
-    return data || [];
+    return data as Integration[];
   } catch (error) {
     console.error(`Erro ao buscar integrações do projeto ${projectId}:`, error);
     return [];

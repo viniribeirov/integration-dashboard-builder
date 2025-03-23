@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeftIcon, ClockIcon, CalendarIcon, Settings, PlusIcon } from 'lucide-react';
@@ -8,7 +7,7 @@ import { Separator } from '../components/ui/separator';
 import { Badge } from '../components/ui/badge';
 import { Integration, Project as ProjectType } from '../types';
 import { getStatusColor, getPlatformColor, formatDate } from '../utils/projectUtils';
-import { getProjectById, getProjectIntegrations } from '../supabase/queries/projects';
+import { getProjectById } from '../supabase/queries/projects';
 import { useOnceAnimation } from '../utils/animations';
 import { toast } from 'sonner';
 
@@ -36,9 +35,8 @@ const Project = () => {
         
         setProject(projectData);
         
-        // Fetch integrations
-        const integrationsData = await getProjectIntegrations(id);
-        setIntegrations(integrationsData);
+        // Utilizamos as integrações relacionadas diretamente do projeto
+        setIntegrations(projectData.integrations || []);
       } catch (error) {
         console.error(`Error fetching project ${id}:`, error);
         toast.error('Erro ao carregar projeto');
@@ -100,22 +98,22 @@ const Project = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
-              <Badge className={`${getStatusColor(project.status)} bg-transparent`}>
-                {project.status?.charAt(0).toUpperCase() + project.status?.slice(1) || 'Sem Status'}
+              <h1 className="text-3xl font-bold tracking-tight">{project?.name}</h1>
+              <Badge className={`${getStatusColor(project?.status)} bg-transparent`}>
+                {project?.status?.charAt(0).toUpperCase() + project?.status?.slice(1) || 'Sem Status'}
               </Badge>
             </div>
-            <p className="text-muted-foreground mt-1">{project.description}</p>
+            <p className="text-muted-foreground mt-1">{project?.description}</p>
           </div>
           
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <div className="flex items-center">
               <CalendarIcon className="h-4 w-4 mr-1" />
-              <span>Criado: {formatDate(project.created_at)}</span>
+              <span>Criado: {formatDate(project?.created_at)}</span>
             </div>
             <div className="flex items-center ml-4">
               <ClockIcon className="h-4 w-4 mr-1" />
-              <span>Atualizado: {formatDate(project.updated_at)}</span>
+              <span>Atualizado: {formatDate(project?.updated_at)}</span>
             </div>
           </div>
         </div>

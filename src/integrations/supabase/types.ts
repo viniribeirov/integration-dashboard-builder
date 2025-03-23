@@ -9,6 +9,50 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      integrations: {
+        Row: {
+          account_name: string | null
+          created_at: string
+          id: string
+          last_sync: string | null
+          name: string
+          platform: string
+          project_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          created_at?: string
+          id?: string
+          last_sync?: string | null
+          name: string
+          platform: string
+          project_id: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          created_at?: string
+          id?: string
+          last_sync?: string | null
+          name?: string
+          platform?: string
+          project_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integrations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string

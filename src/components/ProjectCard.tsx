@@ -116,9 +116,9 @@ const ProjectCard = ({ project, index, onDeleted }: ProjectCardProps) => {
               <p className="text-muted-foreground text-sm line-clamp-2">{project.description}</p>
             </div>
             
-            {project.integrations.length > 0 && (
+            {project.integrations && project.integrations.length > 0 && (
               <div className="mt-6">
-                <h4 className="text-xs font-medium text-muted-foreground mb-3">CONNECTED PLATFORMS</h4>
+                <h4 className="text-xs font-medium text-muted-foreground mb-3">PLATAFORMAS CONECTADAS</h4>
                 <div className="flex flex-wrap gap-2">
                   {project.integrations.map((integration: Integration) => (
                     <IntegrationIcon key={integration.id} integration={integration} />
@@ -131,7 +131,7 @@ const ProjectCard = ({ project, index, onDeleted }: ProjectCardProps) => {
           <CardFooter className="px-6 pb-6 pt-0 flex justify-between items-center">
             <div className="flex items-center text-xs text-muted-foreground">
               <CalendarIcon className="h-3 w-3 mr-1" />
-              <span>Updated {formatDate(project.updated_at)}</span>
+              <span>Atualizado {formatDate(project.updated_at)}</span>
             </div>
             
             <ArrowRightIcon 

@@ -13,7 +13,7 @@ export type Project = {
   description: string | null;
   created_at: string;
   updated_at: string;
-  integrations: Integration[];
+  integrations?: Integration[];
   status: 'active' | 'inactive' | 'pending' | null;
   user_id: string;
   thumbnail?: string | null;
@@ -27,6 +27,8 @@ export type Integration = {
   last_sync?: string;
   account_name?: string;
   project_id: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 // Define your Supabase database types here
@@ -41,13 +43,13 @@ export type Database = {
       };
       projects: {
         Row: Project;
-        Insert: Omit<Project, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at'>>;
+        Insert: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'integrations'>;
+        Update: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at' | 'integrations'>>;
       };
       integrations: {
         Row: Integration;
-        Insert: Omit<Integration, 'id'>;
-        Update: Partial<Omit<Integration, 'id'>>;
+        Insert: Omit<Integration, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Integration, 'id' | 'created_at' | 'updated_at'>>;
       };
     };
   };
