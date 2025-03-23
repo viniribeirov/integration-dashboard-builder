@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { supabase } from '../integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import EditProjectDialog from '../components/EditProjectDialog';
+import ConnectIntegrationModal from '../components/integrations/ConnectIntegrationModal';
 
 const Project = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,7 @@ const Project = () => {
   const [project, setProject] = useState<ProjectType | null>(null);
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showIntegrationModal, setShowIntegrationModal] = useState(false);
   const hasAnimated = useOnceAnimation(100);
 
   const fetchProject = async () => {
@@ -82,15 +84,38 @@ const Project = () => {
       )
       .subscribe();
 
+    // Subscribe to integrations updates
+    const integrationsChannel = supabase
+      .channel('public:integrations')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'integrations',
+          filter: `project_id=eq.${id}`
+        },
+        (payload) => {
+          console.log('Received realtime update for integrations:', payload);
+          fetchProject(); // Refresh the whole project to get updated integrations
+        }
+      )
+      .subscribe();
+
     // Cleanup subscription when component unmounts
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(integrationsChannel);
     };
   }, [id]);
 
   const handleProjectUpdated = (updatedProject: ProjectType) => {
     setProject(updatedProject);
     toast.success('Projeto atualizado com sucesso!');
+  };
+
+  const handleIntegrationAdded = () => {
+    fetchProject();
   };
 
   if (isLoading) {
@@ -182,7 +207,7 @@ const Project = () => {
         <div className="bg-card rounded-lg border shadow-sm p-6 mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Integrações</h2>
-            <Button size="sm">
+            <Button size="sm" onClick={() => setShowIntegrationModal(true)}>
               <PlusIcon className="h-4 w-4 mr-1" />
               Conectar Nova Plataforma
             </Button>
@@ -192,7 +217,7 @@ const Project = () => {
           {integrations.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">Nenhuma integração conectada ainda.</p>
-              <Button className="mt-4">
+              <Button className="mt-4" onClick={() => setShowIntegrationModal(true)}>
                 Conectar Nova Integração
               </Button>
             </div>
@@ -238,6 +263,14 @@ const Project = () => {
           </div>
         </div>
       </div>
+
+      {/* Integration Modals */}
+      <ConnectIntegrationModal 
+        projectId={id || ''} 
+        open={showIntegrationModal} 
+        onOpenChange={setShowIntegrationModal}
+        onIntegrationAdded={handleIntegrationAdded}
+      />
     </AuthLayout>
   );
 };

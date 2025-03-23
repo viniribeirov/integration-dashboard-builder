@@ -9,6 +9,332 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      facebook_ads: {
+        Row: {
+          ad_account_id: string
+          add_to_cart: number
+          adset_id: string | null
+          clicks: number
+          cost_per_add_to_cart: number
+          cost_per_initiate_checkout: number
+          cost_per_purchase: number
+          cost_per_view_content: number
+          cpc: number
+          cpm: number
+          created_at: string
+          ctr: number
+          date: string
+          frequency: number
+          id: string
+          impressions: number
+          initiate_checkout: number
+          name: string
+          objective: string
+          project_id: string | null
+          purchase: number
+          purchase_value: number
+          reach: number
+          roas: number
+          spend: number
+          status: string
+          updated_at: string
+          view_content: number
+        }
+        Insert: {
+          ad_account_id: string
+          add_to_cart: number
+          adset_id?: string | null
+          clicks: number
+          cost_per_add_to_cart: number
+          cost_per_initiate_checkout: number
+          cost_per_purchase: number
+          cost_per_view_content: number
+          cpc: number
+          cpm: number
+          created_at?: string
+          ctr: number
+          date: string
+          frequency: number
+          id: string
+          impressions: number
+          initiate_checkout: number
+          name: string
+          objective: string
+          project_id?: string | null
+          purchase: number
+          purchase_value: number
+          reach: number
+          roas: number
+          spend: number
+          status: string
+          updated_at?: string
+          view_content: number
+        }
+        Update: {
+          ad_account_id?: string
+          add_to_cart?: number
+          adset_id?: string | null
+          clicks?: number
+          cost_per_add_to_cart?: number
+          cost_per_initiate_checkout?: number
+          cost_per_purchase?: number
+          cost_per_view_content?: number
+          cpc?: number
+          cpm?: number
+          created_at?: string
+          ctr?: number
+          date?: string
+          frequency?: number
+          id?: string
+          impressions?: number
+          initiate_checkout?: number
+          name?: string
+          objective?: string
+          project_id?: string | null
+          purchase?: number
+          purchase_value?: number
+          reach?: number
+          roas?: number
+          spend?: number
+          status?: string
+          updated_at?: string
+          view_content?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facebook_ads_adset_id_fkey"
+            columns: ["adset_id"]
+            isOneToOne: false
+            referencedRelation: "facebook_adsets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facebook_ads_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      facebook_adsets: {
+        Row: {
+          ad_account_id: string
+          add_to_cart: number
+          campaign_id: string | null
+          clicks: number
+          cost_per_add_to_cart: number
+          cost_per_initiate_checkout: number
+          cost_per_purchase: number
+          cost_per_view_content: number
+          cpc: number
+          cpm: number
+          created_at: string
+          ctr: number
+          daily_budget: number | null
+          date: string
+          frequency: number
+          id: string
+          impressions: number
+          initiate_checkout: number
+          lifetime_budget: number | null
+          name: string
+          objective: string
+          project_id: string | null
+          purchase: number
+          purchase_value: number
+          reach: number
+          roas: number
+          spend: number
+          status: string
+          updated_at: string
+          view_content: number
+        }
+        Insert: {
+          ad_account_id: string
+          add_to_cart: number
+          campaign_id?: string | null
+          clicks: number
+          cost_per_add_to_cart: number
+          cost_per_initiate_checkout: number
+          cost_per_purchase: number
+          cost_per_view_content: number
+          cpc: number
+          cpm: number
+          created_at?: string
+          ctr: number
+          daily_budget?: number | null
+          date: string
+          frequency: number
+          id: string
+          impressions: number
+          initiate_checkout: number
+          lifetime_budget?: number | null
+          name: string
+          objective: string
+          project_id?: string | null
+          purchase: number
+          purchase_value: number
+          reach: number
+          roas: number
+          spend: number
+          status: string
+          updated_at?: string
+          view_content: number
+        }
+        Update: {
+          ad_account_id?: string
+          add_to_cart?: number
+          campaign_id?: string | null
+          clicks?: number
+          cost_per_add_to_cart?: number
+          cost_per_initiate_checkout?: number
+          cost_per_purchase?: number
+          cost_per_view_content?: number
+          cpc?: number
+          cpm?: number
+          created_at?: string
+          ctr?: number
+          daily_budget?: number | null
+          date?: string
+          frequency?: number
+          id?: string
+          impressions?: number
+          initiate_checkout?: number
+          lifetime_budget?: number | null
+          name?: string
+          objective?: string
+          project_id?: string | null
+          purchase?: number
+          purchase_value?: number
+          reach?: number
+          roas?: number
+          spend?: number
+          status?: string
+          updated_at?: string
+          view_content?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facebook_adsets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "facebook_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facebook_adsets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      facebook_campaigns: {
+        Row: {
+          ad_account_id: string
+          add_to_cart: number
+          clicks: number
+          cost_per_add_to_cart: number
+          cost_per_initiate_checkout: number
+          cost_per_purchase: number
+          cost_per_view_content: number
+          cpc: number
+          cpm: number
+          created_at: string
+          ctr: number
+          daily_budget: number | null
+          date: string
+          frequency: number
+          id: string
+          impressions: number
+          initiate_checkout: number
+          lifetime_budget: number | null
+          name: string
+          objective: string
+          project_id: string | null
+          purchase: number
+          purchase_value: number
+          reach: number
+          roas: number
+          spend: number
+          status: string
+          updated_at: string
+          view_content: number
+        }
+        Insert: {
+          ad_account_id: string
+          add_to_cart: number
+          clicks: number
+          cost_per_add_to_cart: number
+          cost_per_initiate_checkout: number
+          cost_per_purchase: number
+          cost_per_view_content: number
+          cpc: number
+          cpm: number
+          created_at?: string
+          ctr: number
+          daily_budget?: number | null
+          date: string
+          frequency: number
+          id: string
+          impressions: number
+          initiate_checkout: number
+          lifetime_budget?: number | null
+          name: string
+          objective: string
+          project_id?: string | null
+          purchase: number
+          purchase_value: number
+          reach: number
+          roas: number
+          spend: number
+          status: string
+          updated_at?: string
+          view_content: number
+        }
+        Update: {
+          ad_account_id?: string
+          add_to_cart?: number
+          clicks?: number
+          cost_per_add_to_cart?: number
+          cost_per_initiate_checkout?: number
+          cost_per_purchase?: number
+          cost_per_view_content?: number
+          cpc?: number
+          cpm?: number
+          created_at?: string
+          ctr?: number
+          daily_budget?: number | null
+          date?: string
+          frequency?: number
+          id?: string
+          impressions?: number
+          initiate_checkout?: number
+          lifetime_budget?: number | null
+          name?: string
+          objective?: string
+          project_id?: string | null
+          purchase?: number
+          purchase_value?: number
+          reach?: number
+          roas?: number
+          spend?: number
+          status?: string
+          updated_at?: string
+          view_content?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facebook_campaigns_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integrations: {
         Row: {
           account_name: string | null
