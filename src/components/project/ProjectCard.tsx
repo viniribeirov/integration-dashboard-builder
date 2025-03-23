@@ -38,7 +38,7 @@ const ProjectCard = ({ project, index, onDeleted, onUpdated }: ProjectCardProps)
         transition: `all 0.5s ease-out ${index * 0.1}s`
       }}
     >
-      <Card className="overflow-hidden h-full border border-border transition-all duration-300 hover:shadow-md relative">
+      <Card className="group overflow-hidden h-full border border-border transition-all duration-300 hover:shadow-md relative">
         <ProjectActions 
           project={currentProject} 
           onDeleted={onDeleted}
