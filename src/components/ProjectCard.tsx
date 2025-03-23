@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarIcon, ArrowRightIcon, Trash2Icon } from 'lucide-react';
+import { CalendarIcon, ArrowRightIcon, Trash2Icon, MoreHorizontalIcon, PencilIcon } from 'lucide-react';
 import { Project, Integration } from '../types';
 import { getPlatformColor, getStatusColor, formatDate } from '../utils/projectUtils';
 import { useInView } from '../utils/animations';
@@ -21,6 +21,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
 
 interface ProjectCardProps {
   project: Project;
@@ -31,10 +37,10 @@ interface ProjectCardProps {
 
 const ProjectCard = ({ project, index, onDeleted, onUpdated }: ProjectCardProps) => {
   const { ref, isInView } = useInView();
-  const [isHovered, setIsHovered] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentProject, setCurrentProject] = useState<Project>(project);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const handleDelete = async () => {
     if (!currentProject.id) return;
@@ -76,28 +82,35 @@ const ProjectCard = ({ project, index, onDeleted, onUpdated }: ProjectCardProps)
         transition: `all 0.5s ease-out ${index * 0.1}s`
       }}
     >
-      <Card 
-        className="overflow-hidden h-full border border-border transition-all duration-300 hover:shadow-md relative"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <Button
-          variant="destructive"
-          size="icon"
-          className="absolute top-2 right-2 z-10 opacity-0 transition-opacity duration-200 hover:bg-red-600"
-          style={{ opacity: isHovered ? 0.9 : 0 }}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setShowDeleteDialog(true);
-          }}
-        >
-          <Trash2Icon className="h-4 w-4" />
-        </Button>
+      <Card className="overflow-hidden h-full border border-border transition-all duration-300 hover:shadow-md relative">
+        <div className="absolute top-2 right-2 z-10">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontalIcon className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+                <PencilIcon className="mr-2 h-4 w-4" />
+                <span>Editar</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-destructive focus:text-destructive" 
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <Trash2Icon className="mr-2 h-4 w-4" />
+                <span>Excluir</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <EditProjectDialog 
           project={currentProject} 
-          onProjectUpdated={handleProjectUpdated} 
+          onProjectUpdated={handleProjectUpdated}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
         />
 
         <Link to={`/project/${currentProject.id}`} className="block h-full">
@@ -146,9 +159,7 @@ const ProjectCard = ({ project, index, onDeleted, onUpdated }: ProjectCardProps)
               <span>Atualizado {formatDate(currentProject.updated_at)}</span>
             </div>
             
-            <ArrowRightIcon 
-              className={`h-4 w-4 transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`}
-            />
+            <ArrowRightIcon className="h-4 w-4" />
           </CardFooter>
         </Link>
       </Card>

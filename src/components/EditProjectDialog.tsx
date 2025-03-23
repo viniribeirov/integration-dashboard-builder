@@ -21,15 +21,26 @@ import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 interface EditProjectDialogProps {
   project: Project;
   onProjectUpdated?: (project: Project) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const EditProjectDialog = ({ project, onProjectUpdated }: EditProjectDialogProps) => {
-  const [open, setOpen] = useState(false);
+const EditProjectDialog = ({ 
+  project, 
+  onProjectUpdated,
+  open: controlledOpen,
+  onOpenChange
+}: EditProjectDialogProps) => {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description || '');
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(project.thumbnail || null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const isControlled = controlledOpen !== undefined && onOpenChange !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? onOpenChange : setInternalOpen;
 
   // Update local state if the project prop changes
   useEffect(() => {
@@ -106,19 +117,21 @@ const EditProjectDialog = ({ project, onProjectUpdated }: EditProjectDialogProps
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-2 right-10 z-10 opacity-0 transition-opacity duration-200 hover:bg-secondary"
-        style={{ opacity: 0.9 }}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setOpen(true);
-        }}
-      >
-        <Pencil className="h-4 w-4" />
-      </Button>
+      {!isControlled && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-2 right-10 z-10 opacity-0 transition-opacity duration-200 hover:bg-secondary"
+          style={{ opacity: 0.9 }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setOpen(true);
+          }}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+      )}
       
       <Dialog open={open} onOpenChange={(isOpen) => {
         setOpen(isOpen);
