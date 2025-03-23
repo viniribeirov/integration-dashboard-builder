@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeftIcon, ClockIcon, CalendarIcon, Settings, PlusIcon } from 'lucide-react';
+import { ChevronLeftIcon, ClockIcon, CalendarIcon, Settings, PlusIcon, MoreHorizontalIcon, Trash2Icon } from 'lucide-react';
 import AuthLayout from '../components/AuthLayout';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
@@ -15,6 +15,12 @@ import { supabase } from '../integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import EditProjectDialog from '../components/EditProjectDialog';
 import ConnectIntegrationModal from '../components/integrations/ConnectIntegrationModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
 
 const Project = () => {
   const { id } = useParams<{ id: string }>();
@@ -116,6 +122,30 @@ const Project = () => {
 
   const handleIntegrationAdded = () => {
     fetchProject();
+  };
+
+  const handleDeleteIntegration = async (integrationId: string) => {
+    try {
+      // Delete the integration from Supabase
+      const { error } = await supabase
+        .from('integrations')
+        .delete()
+        .eq('id', integrationId);
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Update the local state
+      setIntegrations(prevIntegrations => 
+        prevIntegrations.filter(integration => integration.id !== integrationId)
+      );
+      
+      toast.success('Integração removida com sucesso!');
+    } catch (error) {
+      console.error('Erro ao remover integração:', error);
+      toast.error('Erro ao remover integração. Tente novamente.');
+    }
   };
 
   if (isLoading) {
@@ -243,10 +273,23 @@ const Project = () => {
                     <span className={`text-sm ${getStatusColor(integration.status)}`}>
                       {integration.status.charAt(0).toUpperCase() + integration.status.slice(1)}
                     </span>
-                    <Button variant="ghost" size="sm" className="ml-2">
-                      <Settings className="h-4 w-4 mr-1" />
-                      Configurações
-                    </Button>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="ml-2">
+                          <MoreHorizontalIcon className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => handleDeleteIntegration(integration.id)}
+                        >
+                          <Trash2Icon className="h-4 w-4 mr-2" />
+                          <span>Excluir Integração</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               ))}
