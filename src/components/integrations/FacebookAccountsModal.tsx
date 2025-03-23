@@ -3,9 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "../../integrations/supabase/client";
+import { ScrollArea } from "../ui/scroll-area";
+import { Input } from "../ui/input";
 
 interface AdAccount {
   id: string;
@@ -31,15 +33,31 @@ const FacebookAccountsModal = ({
   onSuccess
 }: FacebookAccountsModalProps) => {
   const [adAccounts, setAdAccounts] = useState<AdAccount[]>([]);
+  const [filteredAccounts, setFilteredAccounts] = useState<AdAccount[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (open) {
       fetchAdAccounts();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredAccounts(adAccounts);
+    } else {
+      const query = searchQuery.toLowerCase();
+      setFilteredAccounts(
+        adAccounts.filter(account => 
+          account.name.toLowerCase().includes(query) || 
+          account.accountId.toLowerCase().includes(query)
+        )
+      );
+    }
+  }, [searchQuery, adAccounts]);
 
   const fetchAdAccounts = async () => {
     setIsLoading(true);
@@ -64,7 +82,9 @@ const FacebookAccountsModal = ({
         throw new Error(data.error);
       }
 
-      setAdAccounts(data.accounts || []);
+      const accounts = data.accounts || [];
+      setAdAccounts(accounts);
+      setFilteredAccounts(accounts);
     } catch (err) {
       console.error('Error fetching ad accounts:', err);
       setError('Não foi possível carregar as contas de anúncio. Por favor tente novamente.');
@@ -125,7 +145,7 @@ const FacebookAccountsModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[70vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Conectar com Facebook Ads</DialogTitle>
           <DialogDescription>
@@ -133,7 +153,17 @@ const FacebookAccountsModal = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="py-4">
+        <div className="py-4 flex-1 flex flex-col overflow-hidden">
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar conta de anúncio..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -144,42 +174,52 @@ const FacebookAccountsModal = ({
               <p className="text-destructive mb-4">{error}</p>
               <Button onClick={fetchAdAccounts}>Tentar Novamente</Button>
             </div>
-          ) : adAccounts.length === 0 ? (
+          ) : filteredAccounts.length === 0 ? (
             <div className="text-center py-6">
-              <p className="text-muted-foreground mb-4">Nenhuma conta de anúncio encontrada para este token.</p>
-              <Button onClick={onClose}>Fechar</Button>
+              {searchQuery ? (
+                <p className="text-muted-foreground mb-4">Nenhuma conta de anúncio corresponde à sua busca.</p>
+              ) : (
+                <p className="text-muted-foreground mb-4">Nenhuma conta de anúncio encontrada para este token.</p>
+              )}
+              {searchQuery ? (
+                <Button variant="outline" onClick={() => setSearchQuery('')}>Limpar busca</Button>
+              ) : (
+                <Button onClick={onClose}>Fechar</Button>
+              )}
             </div>
           ) : (
-            <div className="flex flex-col space-y-4">
-              {adAccounts.map((account) => (
-                <div key={account.id} className="flex items-center justify-between border p-4 rounded-md">
-                  <div>
-                    <div className="font-medium">{account.name}</div>
-                    <div className="text-sm text-muted-foreground">ID: {account.accountId}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className={`text-white ${getStatusColor(account.status)}`}>
-                        {getStatusLabel(account.status)}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">{account.currency}</span>
+            <ScrollArea className="flex-1 -mx-6 px-6">
+              <div className="flex flex-col space-y-4 pb-4">
+                {filteredAccounts.map((account) => (
+                  <div key={account.id} className="flex items-center justify-between border p-4 rounded-md">
+                    <div>
+                      <div className="font-medium">{account.name}</div>
+                      <div className="text-sm text-muted-foreground">ID: {account.accountId}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className={`text-white ${getStatusColor(account.status)}`}>
+                          {getStatusLabel(account.status)}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">{account.currency}</span>
+                      </div>
                     </div>
+                    <Button 
+                      onClick={() => connectAccount(account)}
+                      disabled={connectingId !== null}
+                      className="min-w-24"
+                    >
+                      {connectingId === account.id ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Conectando...
+                        </>
+                      ) : (
+                        'Conectar'
+                      )}
+                    </Button>
                   </div>
-                  <Button 
-                    onClick={() => connectAccount(account)}
-                    disabled={connectingId !== null}
-                    className="min-w-24"
-                  >
-                    {connectingId === account.id ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Conectando...
-                      </>
-                    ) : (
-                      'Conectar'
-                    )}
-                  </Button>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </ScrollArea>
           )}
         </div>
       </DialogContent>
