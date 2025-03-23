@@ -48,7 +48,7 @@ const FacebookAccountsModal = ({
     try {
       const { data, error } = await supabase.functions.invoke('facebook-ads', {
         method: 'GET',
-        path: 'get-ad-accounts',
+        query: { endpoint: 'get-ad-accounts' }
       });
 
       if (error) {
