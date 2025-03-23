@@ -29,6 +29,8 @@ export const getProjects = async (): Promise<Project[]> => {
       return [];
     }
     
+    if (!data) return [];
+    
     // Adaptar formato para corresponder ao tipo Project
     const projects: Project[] = data.map(item => ({
       id: item.id,

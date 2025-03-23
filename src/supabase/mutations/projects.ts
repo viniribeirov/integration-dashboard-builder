@@ -41,6 +41,8 @@ export const createProject = async (projectData: {
       return null;
     }
     
+    if (!data) return null;
+    
     // Adaptar formato para corresponder ao tipo Project
     const project: Project = {
       id: data.id,
@@ -89,6 +91,8 @@ export const updateProject = async (
       console.error(`Erro ao atualizar projeto ${id}:`, error);
       return null;
     }
+    
+    if (!data) return null;
     
     // Adaptar formato para corresponder ao tipo Project
     const project: Project = {
