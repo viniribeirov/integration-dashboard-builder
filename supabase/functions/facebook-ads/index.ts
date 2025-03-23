@@ -52,6 +52,10 @@ serve(async (req) => {
       requestData = {};
     }
 
+    // Use the endpoint from the request data
+    const endpoint = requestData?.endpoint;
+    console.log("Endpoint solicitado:", endpoint);
+
     // Get the Facebook permanent token from Edge Function secrets
     const token = Deno.env.get("FACEBOOK_PERMANENT_TOKEN");
     if (!token) {
@@ -67,47 +71,58 @@ serve(async (req) => {
 
     console.log("Token encontrado, tamanho:", token.length);
 
-    // Fetch ad accounts from Facebook API
-    const apiUrl = `${FACEBOOK_API_BASE_URL}/me/adaccounts?fields=name,account_id,account_status,currency,business_name&access_token=${token}`;
-    console.log("URL da API:", apiUrl);
-    
-    const response = await fetch(apiUrl, { method: "GET" });
+    if (endpoint === "get-ad-accounts") {
+      console.log("Buscando contas de anúncios...");
+      // Fetch ad accounts from Facebook API
+      const apiUrl = `${FACEBOOK_API_BASE_URL}/me/adaccounts?fields=name,account_id,account_status,currency,business_name&access_token=${token}`;
+      console.log("URL da API:", apiUrl);
+      
+      const response = await fetch(apiUrl, { method: "GET" });
 
-    console.log("Status da resposta Facebook:", response.status);
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Facebook API error:", errorData);
+      console.log("Status da resposta Facebook:", response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Facebook API error:", errorData);
+        return new Response(
+          JSON.stringify({ 
+            error: "Erro ao consultar contas de anúncios", 
+            details: errorData 
+          }),
+          { 
+            status: response.status, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
+      }
+
+      const data: ResponseData = await response.json();
+      console.log("Dados recebidos do Facebook:", JSON.stringify(data).substring(0, 200) + "...");
+      
+      // Format the ad accounts data
+      const formattedAccounts = data.data.map(account => ({
+        id: account.id,
+        name: account.name || account.business_name || "Conta sem nome",
+        accountId: account.account_id,
+        status: getAccountStatus(account.account_status),
+        currency: account.currency
+      }));
+
+      console.log("Contas formatadas:", formattedAccounts.length, "contas encontradas");
+      
       return new Response(
-        JSON.stringify({ 
-          error: "Erro ao consultar contas de anúncios", 
-          details: errorData 
-        }),
+        JSON.stringify({ accounts: formattedAccounts }),
         { 
-          status: response.status, 
+          status: 200, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
         }
       );
     }
 
-    const data: ResponseData = await response.json();
-    console.log("Dados recebidos do Facebook:", JSON.stringify(data).substring(0, 200) + "...");
-    
-    // Format the ad accounts data
-    const formattedAccounts = data.data.map(account => ({
-      id: account.id,
-      name: account.name || account.business_name || "Conta sem nome",
-      accountId: account.account_id,
-      status: getAccountStatus(account.account_status),
-      currency: account.currency
-    }));
-
-    console.log("Contas formatadas:", formattedAccounts.length, "contas encontradas");
-    
     return new Response(
-      JSON.stringify({ accounts: formattedAccounts }),
+      JSON.stringify({ error: "Endpoint não encontrado" }),
       { 
-        status: 200, 
+        status: 404, 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 
       }
     );

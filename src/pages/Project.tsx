@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeftIcon, ClockIcon, CalendarIcon, Settings, PlusIcon, Trash2 } from 'lucide-react';
+import { ChevronLeftIcon, ClockIcon, CalendarIcon, Settings, PlusIcon } from 'lucide-react';
 import AuthLayout from '../components/AuthLayout';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
@@ -14,9 +15,6 @@ import { supabase } from '../integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import EditProjectDialog from '../components/EditProjectDialog';
 import ConnectIntegrationModal from '../components/integrations/ConnectIntegrationModal';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
-import { deleteIntegration } from '../services/integrationService';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 
 const Project = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,9 +23,6 @@ const Project = () => {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showIntegrationModal, setShowIntegrationModal] = useState(false);
-  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [deletingIntegration, setDeletingIntegration] = useState<Integration | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const hasAnimated = useOnceAnimation(100);
 
   const fetchProject = async () => {
@@ -45,6 +40,7 @@ const Project = () => {
       
       setProject(projectData);
       
+      // Utilizamos as integrações relacionadas diretamente do projeto
       setIntegrations(projectData.integrations || []);
     } catch (error) {
       console.error(`Error fetching project ${id}:`, error);
@@ -59,9 +55,11 @@ const Project = () => {
     fetchProject();
   }, [id, navigate]);
 
+  // Setup realtime updates for the current project
   useEffect(() => {
     if (!id) return;
 
+    // Subscribe to realtime updates
     const channel = supabase
       .channel('public:projects:single')
       .on(
@@ -74,6 +72,7 @@ const Project = () => {
         },
         (payload) => {
           console.log('Received realtime update for project:', payload);
+          // Update the project in the local state while preserving integrations
           setProject(prevProject => {
             if (!prevProject) return null;
             return { 
@@ -85,6 +84,7 @@ const Project = () => {
       )
       .subscribe();
 
+    // Subscribe to integrations updates
     const integrationsChannel = supabase
       .channel('public:integrations')
       .on(
@@ -97,11 +97,12 @@ const Project = () => {
         },
         (payload) => {
           console.log('Received realtime update for integrations:', payload);
-          fetchProject();
+          fetchProject(); // Refresh the whole project to get updated integrations
         }
       )
       .subscribe();
 
+    // Cleanup subscription when component unmounts
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(integrationsChannel);
@@ -115,34 +116,6 @@ const Project = () => {
 
   const handleIntegrationAdded = () => {
     fetchProject();
-  };
-
-  const handleDeleteIntegration = async (integration: Integration) => {
-    setDeletingIntegration(integration);
-    setShowDeleteAlert(true);
-  };
-
-  const confirmDeleteIntegration = async () => {
-    if (!deletingIntegration) return;
-    
-    try {
-      setIsDeleting(true);
-      const result = await deleteIntegration(deletingIntegration.id, deletingIntegration.project_id);
-      
-      if (result.success) {
-        toast.success(`Integração ${deletingIntegration.name} excluída com sucesso`);
-        fetchProject();
-      } else {
-        toast.error(`Erro ao excluir integração: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Error deleting integration:', error);
-      toast.error('Erro ao excluir integração');
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteAlert(false);
-      setDeletingIntegration(null);
-    }
   };
 
   if (isLoading) {
@@ -179,6 +152,7 @@ const Project = () => {
       <div className={`transition-all duration-700 ease-out ${
         hasAnimated ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}>
+        {/* Back button */}
         <Button
           variant="ghost"
           size="sm"
@@ -189,6 +163,7 @@ const Project = () => {
           Voltar para Projetos
         </Button>
 
+        {/* Project header */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16 rounded-full border border-border">
@@ -228,6 +203,7 @@ const Project = () => {
           </div>
         </div>
 
+        {/* Integrations section */}
         <div className="bg-card rounded-lg border shadow-sm p-6 mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Integrações</h2>
@@ -267,23 +243,10 @@ const Project = () => {
                     <span className={`text-sm ${getStatusColor(integration.status)}`}>
                       {integration.status.charAt(0).toUpperCase() + integration.status.slice(1)}
                     </span>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="ml-2">
-                          <Settings className="h-4 w-4 mr-1" />
-                          Configurações
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
-                          className="text-destructive focus:text-destructive" 
-                          onClick={() => handleDeleteIntegration(integration)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Excluir integração
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button variant="ghost" size="sm" className="ml-2">
+                      <Settings className="h-4 w-4 mr-1" />
+                      Configurações
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -291,6 +254,7 @@ const Project = () => {
           )}
         </div>
 
+        {/* Analytics section placeholder */}
         <div className="bg-card rounded-lg border shadow-sm p-6">
           <h2 className="text-xl font-semibold mb-4">Visão Geral</h2>
           <Separator className="mb-6" />
@@ -300,34 +264,13 @@ const Project = () => {
         </div>
       </div>
 
+      {/* Integration Modals */}
       <ConnectIntegrationModal 
         projectId={id || ''} 
         open={showIntegrationModal} 
         onOpenChange={setShowIntegrationModal}
         onIntegrationAdded={handleIntegrationAdded}
       />
-
-      <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir integração</AlertDialogTitle>
-            <AlertDialogDescription>
-              Isso irá excluir permanentemente a integração "{deletingIntegration?.name}" e todos os dados relacionados 
-              (campanhas, conjuntos de anúncios e anúncios). Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDeleteIntegration} 
-              className="bg-destructive hover:bg-destructive/90"
-              disabled={isDeleting}
-            >
-              {isDeleting ? 'Excluindo...' : 'Sim, excluir'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </AuthLayout>
   );
 };
