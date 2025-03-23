@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarIcon, ArrowRightIcon, Trash2Icon, MoreHorizontalIcon } from 'lucide-react';
+import { CalendarIcon, ArrowRightIcon, Trash2Icon } from 'lucide-react';
 import { Project, Integration } from '../types';
 import { getPlatformColor, getStatusColor, formatDate } from '../utils/projectUtils';
 import { useInView } from '../utils/animations';
@@ -22,12 +21,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
 
 interface ProjectCardProps {
   project: Project;
@@ -88,44 +81,28 @@ const ProjectCard = ({ project, index, onDeleted, onUpdated }: ProjectCardProps)
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 z-10 opacity-0 transition-opacity duration-200"
-              style={{ opacity: isHovered ? 0.9 : 0 }}
-            >
-              <MoreHorizontalIcon className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => {
-              const editBtn = document.getElementById(`edit-project-${currentProject.id}`);
-              if (editBtn) editBtn.click();
-            }}>
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              className="text-destructive focus:text-destructive"
-              onClick={() => setShowDeleteDialog(true)}
-            >
-              Excluir
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        
-        <div className="hidden">
-          <EditProjectDialog 
-            project={currentProject} 
-            onProjectUpdated={handleProjectUpdated} 
-            triggerButtonId={`edit-project-${currentProject.id}`}
-          />
-        </div>
+        <Button
+          variant="destructive"
+          size="icon"
+          className="absolute top-2 right-2 z-10 opacity-0 transition-opacity duration-200 hover:bg-red-600"
+          style={{ opacity: isHovered ? 0.9 : 0 }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowDeleteDialog(true);
+          }}
+        >
+          <Trash2Icon className="h-4 w-4" />
+        </Button>
+
+        <EditProjectDialog 
+          project={currentProject} 
+          onProjectUpdated={handleProjectUpdated} 
+        />
 
         <Link to={`/project/${currentProject.id}`} className="block h-full">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-3">
               <Avatar className="h-12 w-12 rounded-full border border-border flex-shrink-0">
                 {currentProject.thumbnail ? (
                   <AvatarImage src={currentProject.thumbnail} alt={currentProject.name} />
@@ -136,24 +113,25 @@ const ProjectCard = ({ project, index, onDeleted, onUpdated }: ProjectCardProps)
                 )}
               </Avatar>
               
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-semibold text-lg line-clamp-1">{currentProject.name}</h3>
-                  <Badge 
-                    className={`${getStatusColor(currentProject.status)} border-none text-xs whitespace-nowrap`}
-                    variant="outline"
-                  >
-                    {currentProject.status?.charAt(0).toUpperCase() + currentProject.status?.slice(1) || 'No Status'}
-                  </Badge>
-                </div>
-                <p className="text-muted-foreground text-sm line-clamp-2 mt-1">{currentProject.description}</p>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-xl line-clamp-1">{currentProject.name}</h3>
+                <p className="text-muted-foreground text-sm line-clamp-2">{currentProject.description}</p>
               </div>
             </div>
             
+            <div className="mt-4">
+              <Badge 
+                className={`${getStatusColor(currentProject.status)} border-none`}
+                variant="outline"
+              >
+                {currentProject.status?.charAt(0).toUpperCase() + currentProject.status?.slice(1) || 'No Status'}
+              </Badge>
+            </div>
+            
             {currentProject.integrations && currentProject.integrations.length > 0 && (
-              <div className="mt-4 flex items-center gap-1">
-                <span className="text-xs text-muted-foreground mr-2">Plataformas:</span>
-                <div className="flex -space-x-2">
+              <div className="mt-6">
+                <h4 className="text-xs font-medium text-muted-foreground mb-3">PLATAFORMAS CONECTADAS</h4>
+                <div className="flex flex-wrap gap-2">
                   {currentProject.integrations.map((integration: Integration) => (
                     <IntegrationIcon key={integration.id} integration={integration} />
                   ))}
@@ -162,7 +140,7 @@ const ProjectCard = ({ project, index, onDeleted, onUpdated }: ProjectCardProps)
             )}
           </CardContent>
           
-          <CardFooter className="px-4 pb-4 pt-0 flex justify-between items-center border-t border-border mt-2 pt-3">
+          <CardFooter className="px-6 pb-6 pt-0 flex justify-between items-center">
             <div className="flex items-center text-xs text-muted-foreground">
               <CalendarIcon className="h-3 w-3 mr-1" />
               <span>Atualizado {formatDate(currentProject.updated_at)}</span>
@@ -208,14 +186,14 @@ const IntegrationIcon = ({ integration }: { integration: Integration }) => {
 
   return (
     <div className="relative">
-      <Avatar className={`h-6 w-6 ${platformColor} border-2 border-background`}>
+      <Avatar className={`h-8 w-8 ${platformColor}`}>
         <AvatarFallback className="text-white text-xs">
           {getPlatformLetter()}
         </AvatarFallback>
       </Avatar>
       
       <span 
-        className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background ${
+        className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background ${
           integration.status === 'connected' ? 'bg-green-500' : 
           integration.status === 'disconnected' ? 'bg-red-500' : 'bg-amber-500'
         }`}

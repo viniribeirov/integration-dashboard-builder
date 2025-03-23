@@ -21,10 +21,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 interface EditProjectDialogProps {
   project: Project;
   onProjectUpdated?: (project: Project) => void;
-  triggerButtonId?: string; // Add this prop to the interface
 }
 
-const EditProjectDialog = ({ project, onProjectUpdated, triggerButtonId }: EditProjectDialogProps) => {
+const EditProjectDialog = ({ project, onProjectUpdated }: EditProjectDialogProps) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description || '');
@@ -107,31 +106,19 @@ const EditProjectDialog = ({ project, onProjectUpdated, triggerButtonId }: EditP
 
   return (
     <>
-      {triggerButtonId ? (
-        <Button
-          id={triggerButtonId}
-          variant="ghost"
-          size="icon"
-          className="hidden"
-          onClick={() => setOpen(true)}
-        >
-          <span className="sr-only">Editar projeto</span>
-        </Button>
-      ) : (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-2 right-10 z-10 opacity-0 transition-opacity duration-200 hover:bg-secondary"
-          style={{ opacity: 0.9 }}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setOpen(true);
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-      )}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-2 right-10 z-10 opacity-0 transition-opacity duration-200 hover:bg-secondary"
+        style={{ opacity: 0.9 }}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(true);
+        }}
+      >
+        <Pencil className="h-4 w-4" />
+      </Button>
       
       <Dialog open={open} onOpenChange={(isOpen) => {
         setOpen(isOpen);
