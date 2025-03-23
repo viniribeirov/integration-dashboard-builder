@@ -1,7 +1,7 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../supabase/client';
+import { supabase } from '../integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 

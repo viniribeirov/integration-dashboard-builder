@@ -1,13 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { ChevronRightIcon, LayoutGridIcon, ListIcon } from 'lucide-react';
+import { ChevronRightIcon } from 'lucide-react';
 import AuthLayout from '../components/AuthLayout';
 import ProjectList from '../components/ProjectList';
 import CreateProjectButton from '../components/CreateProjectButton';
-import { mockProjects } from '../services/mockData';
 import { useAuth } from '../hooks/useAuth';
 import { Project } from '../types';
 import { useOnceAnimation } from '../utils/animations';
+import { getProjects } from '../supabase/queries/projects';
 
 const Dashboard = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -16,12 +16,12 @@ const Dashboard = () => {
   const hasAnimated = useOnceAnimation(100);
 
   useEffect(() => {
-    // Simulate loading projects from API
+    // Usamos a função de query para buscar os projetos
     const fetchProjects = async () => {
       try {
-        // In a real app, this would fetch from Supabase
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setProjects(mockProjects);
+        setIsLoading(true);
+        const projectsData = await getProjects();
+        setProjects(projectsData);
       } catch (error) {
         console.error('Error fetching projects:', error);
       } finally {

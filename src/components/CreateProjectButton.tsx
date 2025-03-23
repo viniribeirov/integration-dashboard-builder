@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { PlusIcon, XIcon } from 'lucide-react';
+import { PlusIcon } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { 
   Dialog, 
@@ -14,6 +14,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
+import { createProject } from '../supabase/mutations/projects';
 
 const CreateProjectButton = () => {
   const [open, setOpen] = useState(false);
@@ -32,12 +33,21 @@ const CreateProjectButton = () => {
     try {
       setIsLoading(true);
       
-      // This is where you would call your Supabase mutation
-      // For now, we'll just simulate a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Usamos a função de mutation para criar o projeto
+      const newProject = await createProject({
+        name: projectName,
+        description: projectDescription
+      });
       
-      toast.success('Project created successfully');
-      setOpen(false);
+      if (newProject) {
+        toast.success('Project created successfully');
+        setOpen(false);
+        
+        // Opcionalmente, recarregar a lista de projetos ou redirecionar
+        // Isso será implementado adequadamente quando conectarmos ao Supabase real
+      } else {
+        toast.error('Failed to create project');
+      }
       
       // Reset form
       setProjectName('');
