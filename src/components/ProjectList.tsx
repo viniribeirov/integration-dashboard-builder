@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { Project } from '../types';
-import ProjectCard from './ProjectCard';
+import ProjectCard from './project/ProjectCard';
 import { useStaggeredAnimation } from '../utils/animations';
 import { Search } from 'lucide-react';
 
@@ -21,7 +20,6 @@ const ProjectList = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   
-  // Filter projects based on search query and status filter
   const filteredProjects = projects.filter(project => {
     const matchesSearch = 
       project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -32,7 +30,6 @@ const ProjectList = ({
     return matchesSearch && matchesStatus;
   });
   
-  // Generate delays for staggered animations
   const animationDelays = useStaggeredAnimation(filteredProjects.length);
 
   if (isLoading) {
