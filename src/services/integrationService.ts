@@ -20,7 +20,7 @@ export const deleteIntegration = async (
   try {
     console.log(`Deleting integration ${integrationId} from project ${projectId}`);
     
-    // Step 1: Check if it's a Facebook integration (we'll only delete Facebook data for now)
+    // Step 1: Check if it's a Facebook integration
     const { data: integration, error: integrationError } = await supabase
       .from('integrations')
       .select('platform')

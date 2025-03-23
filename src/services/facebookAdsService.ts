@@ -1,4 +1,3 @@
-
 import { supabase } from "../integrations/supabase/client";
 import { toast } from "sonner";
 import { format, subDays, parseISO, isAfter, isSameDay } from "date-fns";
@@ -124,23 +123,21 @@ export const syncFacebookAdsData = async (params: FacebookSyncParams): Promise<F
     }
     
     // For this implementation, we'll sync all dates at once
-    // A more advanced implementation could batch dates or use date chunks
     onProgress?.(20, `Sincronizando ${missingDates.length} dia(s)...`);
     
-    // Call the Edge Function to fetch data
-    const { data, error } = await supabase.functions.invoke('facebook-ads', {
+    // Call the NEW Edge Function to fetch data
+    const { data, error } = await supabase.functions.invoke('facebook-sync', {
       method: 'POST',
       body: { 
-        endpoint: 'sync-data',
-        adAccountId,
         projectId,
+        adAccountId,
         startDate,
         endDate
       }
     });
     
     if (error) {
-      console.error("Error invoking facebook-ads function:", error);
+      console.error("Error invoking facebook-sync function:", error);
       onProgress?.(100, "Erro ao sincronizar dados");
       return { 
         success: false, 
@@ -149,7 +146,7 @@ export const syncFacebookAdsData = async (params: FacebookSyncParams): Promise<F
     }
     
     if (!data) {
-      console.error("No data returned from facebook-ads function");
+      console.error("No data returned from facebook-sync function");
       onProgress?.(100, "Erro ao sincronizar dados");
       return { 
         success: false, 

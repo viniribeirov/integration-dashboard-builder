@@ -2,3 +2,5 @@
 project_id = "fqitlkgxqmhzqbhqazyc"
 [functions.facebook-ads]
 verify_jwt = false
+[functions.facebook-sync]
+verify_jwt = false
