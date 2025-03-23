@@ -29,7 +29,7 @@ export const mockProjects: Project[] = [
       }
     ],
     status: 'active',
-    owner_id: 'user-1',
+    user_id: 'user-1',
     thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop'
   },
   {
@@ -59,7 +59,7 @@ export const mockProjects: Project[] = [
       }
     ],
     status: 'active',
-    owner_id: 'user-1',
+    user_id: 'user-1',
     thumbnail: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=1974&auto=format&fit=crop'
   },
   {
@@ -80,7 +80,7 @@ export const mockProjects: Project[] = [
       }
     ],
     status: 'active',
-    owner_id: 'user-1',
+    user_id: 'user-1',
     thumbnail: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=2070&auto=format&fit=crop'
   },
   {
@@ -99,7 +99,7 @@ export const mockProjects: Project[] = [
       }
     ],
     status: 'pending',
-    owner_id: 'user-1',
+    user_id: 'user-1',
     thumbnail: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop'
   }
 ];

@@ -13,9 +13,10 @@ import { Badge } from '../components/ui/badge';
 interface ProjectCardProps {
   project: Project;
   index: number;
+  onDeleted?: (id: string) => void;
 }
 
-const ProjectCard = ({ project, index }: ProjectCardProps) => {
+const ProjectCard = ({ project, index, onDeleted }: ProjectCardProps) => {
   const { ref, isInView } = useInView();
   const [isHovered, setIsHovered] = useState(false);
   
@@ -59,7 +60,7 @@ const ProjectCard = ({ project, index }: ProjectCardProps) => {
                   className={`${getStatusColor(project.status)} border-none`}
                   variant="outline"
                 >
-                  {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                  {project.status?.charAt(0).toUpperCase() + project.status?.slice(1) || 'No Status'}
                 </Badge>
               </div>
             </div>

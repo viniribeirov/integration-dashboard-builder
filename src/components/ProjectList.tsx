@@ -17,7 +17,7 @@ const ProjectList = ({ projects, onProjectDeleted }: ProjectListProps) => {
   const filteredProjects = projects.filter(project => {
     const matchesSearch = 
       project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase());
+      project.description?.toLowerCase().includes(searchQuery.toLowerCase() || '');
     
     const matchesStatus = statusFilter ? project.status === statusFilter : true;
     
