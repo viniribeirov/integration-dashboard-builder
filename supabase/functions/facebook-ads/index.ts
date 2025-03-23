@@ -32,8 +32,19 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const endpoint = url.pathname.split("/").pop();
+    // Get request body as JSON
+    let requestData;
+    if (req.method === "POST") {
+      requestData = await req.json();
+    } else if (req.method === "GET") {
+      // For GET requests, try to parse URL parameters
+      const url = new URL(req.url);
+      const params = Object.fromEntries(url.searchParams.entries());
+      requestData = params;
+    }
+
+    // Use the endpoint from the request data
+    const endpoint = requestData?.endpoint;
 
     // Get the Facebook permanent token from Edge Function secrets
     const token = Deno.env.get("FACEBOOK_PERMANENT_TOKEN");
