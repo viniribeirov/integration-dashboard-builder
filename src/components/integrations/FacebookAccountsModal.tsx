@@ -104,7 +104,7 @@ const FacebookAccountsModal = ({
         .insert({
           platform: 'facebook',
           project_id: projectId,
-          status: 'connected', // Explicitly use 'connected' to match the type
+          status: 'connected',
           name: account.name,
           account_name: `${account.name} (${account.accountId})`,
           last_sync: new Date().toISOString()

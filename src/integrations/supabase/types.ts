@@ -9,163 +9,105 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      dashboard_widgets: {
-        Row: {
-          created_at: string
-          custom_formula: string | null
-          id: string
-          metrics: Json
-          name: string
-          platform: string
-          position: number
-          project_id: string
-          size: string
-          type: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          custom_formula?: string | null
-          id?: string
-          metrics: Json
-          name: string
-          platform: string
-          position: number
-          project_id: string
-          size?: string
-          type: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          custom_formula?: string | null
-          id?: string
-          metrics?: Json
-          name?: string
-          platform?: string
-          position?: number
-          project_id?: string
-          size?: string
-          type?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "dashboard_widgets_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       facebook_ads: {
         Row: {
-          account_id: string
-          action_values: Json | null
-          actions: Json | null
           ad_account_id: string
-          ad_id: string
-          ad_name: string | null
-          adset_id: string
-          adset_name: string | null
-          campaign_id: string
-          campaign_name: string | null
-          conversion_rate_ranking: string | null
+          add_to_cart: number | null
+          adset_id: string | null
+          clicks: number | null
+          cost_per_add_to_cart: number | null
+          cost_per_initiate_checkout: number | null
+          cost_per_purchase: number | null
+          cost_per_view_content: number | null
           cpc: number | null
           cpm: number | null
           created_at: string | null
-          date: string | null
-          date_start: string
-          date_stop: string
-          engagement_rate_ranking: string | null
+          ctr: number | null
+          date: string
           frequency: number | null
           id: string
-          inline_link_click_ctr: number | null
-          inline_link_clicks: number | null
+          impressions: number | null
+          initiate_checkout: number | null
+          name: string | null
+          objective: string | null
           project_id: string | null
-          purchase_roas: Json | null
-          quality_ranking: string | null
+          purchase: number | null
+          purchase_value: number | null
+          reach: number | null
+          roas: number | null
           spend: number | null
-          unique_actions: Json | null
+          status: string | null
           updated_at: string | null
-          video_avg_time_watched_actions: Json | null
-          video_continuous_2_sec_watched_actions: Json | null
-          video_p100_watched_actions: Json | null
-          video_p50_watched_actions: Json | null
-          video_play_actions: Json | null
+          view_content: number | null
         }
         Insert: {
-          account_id: string
-          action_values?: Json | null
-          actions?: Json | null
           ad_account_id: string
-          ad_id: string
-          ad_name?: string | null
-          adset_id: string
-          adset_name?: string | null
-          campaign_id: string
-          campaign_name?: string | null
-          conversion_rate_ranking?: string | null
+          add_to_cart?: number | null
+          adset_id?: string | null
+          clicks?: number | null
+          cost_per_add_to_cart?: number | null
+          cost_per_initiate_checkout?: number | null
+          cost_per_purchase?: number | null
+          cost_per_view_content?: number | null
           cpc?: number | null
           cpm?: number | null
           created_at?: string | null
-          date?: string | null
-          date_start: string
-          date_stop: string
-          engagement_rate_ranking?: string | null
+          ctr?: number | null
+          date: string
           frequency?: number | null
-          id?: string
-          inline_link_click_ctr?: number | null
-          inline_link_clicks?: number | null
+          id: string
+          impressions?: number | null
+          initiate_checkout?: number | null
+          name?: string | null
+          objective?: string | null
           project_id?: string | null
-          purchase_roas?: Json | null
-          quality_ranking?: string | null
+          purchase?: number | null
+          purchase_value?: number | null
+          reach?: number | null
+          roas?: number | null
           spend?: number | null
-          unique_actions?: Json | null
+          status?: string | null
           updated_at?: string | null
-          video_avg_time_watched_actions?: Json | null
-          video_continuous_2_sec_watched_actions?: Json | null
-          video_p100_watched_actions?: Json | null
-          video_p50_watched_actions?: Json | null
-          video_play_actions?: Json | null
+          view_content?: number | null
         }
         Update: {
-          account_id?: string
-          action_values?: Json | null
-          actions?: Json | null
           ad_account_id?: string
-          ad_id?: string
-          ad_name?: string | null
-          adset_id?: string
-          adset_name?: string | null
-          campaign_id?: string
-          campaign_name?: string | null
-          conversion_rate_ranking?: string | null
+          add_to_cart?: number | null
+          adset_id?: string | null
+          clicks?: number | null
+          cost_per_add_to_cart?: number | null
+          cost_per_initiate_checkout?: number | null
+          cost_per_purchase?: number | null
+          cost_per_view_content?: number | null
           cpc?: number | null
           cpm?: number | null
           created_at?: string | null
-          date?: string | null
-          date_start?: string
-          date_stop?: string
-          engagement_rate_ranking?: string | null
+          ctr?: number | null
+          date?: string
           frequency?: number | null
           id?: string
-          inline_link_click_ctr?: number | null
-          inline_link_clicks?: number | null
+          impressions?: number | null
+          initiate_checkout?: number | null
+          name?: string | null
+          objective?: string | null
           project_id?: string | null
-          purchase_roas?: Json | null
-          quality_ranking?: string | null
+          purchase?: number | null
+          purchase_value?: number | null
+          reach?: number | null
+          roas?: number | null
           spend?: number | null
-          unique_actions?: Json | null
+          status?: string | null
           updated_at?: string | null
-          video_avg_time_watched_actions?: Json | null
-          video_continuous_2_sec_watched_actions?: Json | null
-          video_p100_watched_actions?: Json | null
-          video_p50_watched_actions?: Json | null
-          video_play_actions?: Json | null
+          view_content?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "facebook_ads_adset_id_fkey"
+            columns: ["adset_id"]
+            isOneToOne: false
+            referencedRelation: "facebook_adsets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "facebook_ads_project_id_fkey"
             columns: ["project_id"]
@@ -177,90 +119,109 @@ export type Database = {
       }
       facebook_adsets: {
         Row: {
-          account_id: string
-          action_values: Json | null
-          actions: Json | null
           ad_account_id: string
-          adset_id: string
-          adset_name: string | null
-          campaign_id: string
-          campaign_name: string | null
-          conversion_rate_ranking: string | null
+          add_to_cart: number | null
+          campaign_id: string | null
+          clicks: number | null
+          cost_per_add_to_cart: number | null
+          cost_per_initiate_checkout: number | null
+          cost_per_purchase: number | null
+          cost_per_view_content: number | null
           cpc: number | null
           cpm: number | null
           created_at: string | null
-          date: string | null
-          date_start: string
-          date_stop: string
-          engagement_rate_ranking: string | null
+          ctr: number | null
+          daily_budget: number | null
+          date: string
           frequency: number | null
           id: string
-          inline_link_click_ctr: number | null
-          inline_link_clicks: number | null
+          impressions: number | null
+          initiate_checkout: number | null
+          lifetime_budget: number | null
+          name: string | null
+          objective: string | null
           project_id: string | null
-          purchase_roas: Json | null
-          quality_ranking: string | null
+          purchase: number | null
+          purchase_value: number | null
+          reach: number | null
+          roas: number | null
           spend: number | null
-          unique_actions: Json | null
+          status: string | null
           updated_at: string | null
+          view_content: number | null
         }
         Insert: {
-          account_id: string
-          action_values?: Json | null
-          actions?: Json | null
           ad_account_id: string
-          adset_id: string
-          adset_name?: string | null
-          campaign_id: string
-          campaign_name?: string | null
-          conversion_rate_ranking?: string | null
+          add_to_cart?: number | null
+          campaign_id?: string | null
+          clicks?: number | null
+          cost_per_add_to_cart?: number | null
+          cost_per_initiate_checkout?: number | null
+          cost_per_purchase?: number | null
+          cost_per_view_content?: number | null
           cpc?: number | null
           cpm?: number | null
           created_at?: string | null
-          date?: string | null
-          date_start: string
-          date_stop: string
-          engagement_rate_ranking?: string | null
+          ctr?: number | null
+          daily_budget?: number | null
+          date: string
           frequency?: number | null
-          id?: string
-          inline_link_click_ctr?: number | null
-          inline_link_clicks?: number | null
+          id: string
+          impressions?: number | null
+          initiate_checkout?: number | null
+          lifetime_budget?: number | null
+          name?: string | null
+          objective?: string | null
           project_id?: string | null
-          purchase_roas?: Json | null
-          quality_ranking?: string | null
+          purchase?: number | null
+          purchase_value?: number | null
+          reach?: number | null
+          roas?: number | null
           spend?: number | null
-          unique_actions?: Json | null
+          status?: string | null
           updated_at?: string | null
+          view_content?: number | null
         }
         Update: {
-          account_id?: string
-          action_values?: Json | null
-          actions?: Json | null
           ad_account_id?: string
-          adset_id?: string
-          adset_name?: string | null
-          campaign_id?: string
-          campaign_name?: string | null
-          conversion_rate_ranking?: string | null
+          add_to_cart?: number | null
+          campaign_id?: string | null
+          clicks?: number | null
+          cost_per_add_to_cart?: number | null
+          cost_per_initiate_checkout?: number | null
+          cost_per_purchase?: number | null
+          cost_per_view_content?: number | null
           cpc?: number | null
           cpm?: number | null
           created_at?: string | null
-          date?: string | null
-          date_start?: string
-          date_stop?: string
-          engagement_rate_ranking?: string | null
+          ctr?: number | null
+          daily_budget?: number | null
+          date?: string
           frequency?: number | null
           id?: string
-          inline_link_click_ctr?: number | null
-          inline_link_clicks?: number | null
+          impressions?: number | null
+          initiate_checkout?: number | null
+          lifetime_budget?: number | null
+          name?: string | null
+          objective?: string | null
           project_id?: string | null
-          purchase_roas?: Json | null
-          quality_ranking?: string | null
+          purchase?: number | null
+          purchase_value?: number | null
+          reach?: number | null
+          roas?: number | null
           spend?: number | null
-          unique_actions?: Json | null
+          status?: string | null
           updated_at?: string | null
+          view_content?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "facebook_adsets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "facebook_campaigns"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "facebook_adsets_project_id_fkey"
             columns: ["project_id"]
@@ -272,82 +233,97 @@ export type Database = {
       }
       facebook_campaigns: {
         Row: {
-          account_id: string
-          action_values: Json | null
-          actions: Json | null
           ad_account_id: string
-          campaign_id: string
-          campaign_name: string | null
-          conversion_rate_ranking: string | null
+          add_to_cart: number | null
+          clicks: number | null
+          cost_per_add_to_cart: number | null
+          cost_per_initiate_checkout: number | null
+          cost_per_purchase: number | null
+          cost_per_view_content: number | null
           cpc: number | null
           cpm: number | null
           created_at: string | null
-          date: string | null
-          date_start: string
-          date_stop: string
-          engagement_rate_ranking: string | null
+          ctr: number | null
+          daily_budget: number | null
+          date: string
           frequency: number | null
           id: string
-          inline_link_click_ctr: number | null
-          inline_link_clicks: number | null
+          impressions: number | null
+          initiate_checkout: number | null
+          lifetime_budget: number | null
+          name: string | null
+          objective: string | null
           project_id: string | null
-          purchase_roas: Json | null
-          quality_ranking: string | null
+          purchase: number | null
+          purchase_value: number | null
+          reach: number | null
+          roas: number | null
           spend: number | null
-          unique_actions: Json | null
+          status: string | null
           updated_at: string | null
+          view_content: number | null
         }
         Insert: {
-          account_id: string
-          action_values?: Json | null
-          actions?: Json | null
           ad_account_id: string
-          campaign_id: string
-          campaign_name?: string | null
-          conversion_rate_ranking?: string | null
+          add_to_cart?: number | null
+          clicks?: number | null
+          cost_per_add_to_cart?: number | null
+          cost_per_initiate_checkout?: number | null
+          cost_per_purchase?: number | null
+          cost_per_view_content?: number | null
           cpc?: number | null
           cpm?: number | null
           created_at?: string | null
-          date?: string | null
-          date_start: string
-          date_stop: string
-          engagement_rate_ranking?: string | null
+          ctr?: number | null
+          daily_budget?: number | null
+          date: string
           frequency?: number | null
-          id?: string
-          inline_link_click_ctr?: number | null
-          inline_link_clicks?: number | null
+          id: string
+          impressions?: number | null
+          initiate_checkout?: number | null
+          lifetime_budget?: number | null
+          name?: string | null
+          objective?: string | null
           project_id?: string | null
-          purchase_roas?: Json | null
-          quality_ranking?: string | null
+          purchase?: number | null
+          purchase_value?: number | null
+          reach?: number | null
+          roas?: number | null
           spend?: number | null
-          unique_actions?: Json | null
+          status?: string | null
           updated_at?: string | null
+          view_content?: number | null
         }
         Update: {
-          account_id?: string
-          action_values?: Json | null
-          actions?: Json | null
           ad_account_id?: string
-          campaign_id?: string
-          campaign_name?: string | null
-          conversion_rate_ranking?: string | null
+          add_to_cart?: number | null
+          clicks?: number | null
+          cost_per_add_to_cart?: number | null
+          cost_per_initiate_checkout?: number | null
+          cost_per_purchase?: number | null
+          cost_per_view_content?: number | null
           cpc?: number | null
           cpm?: number | null
           created_at?: string | null
-          date?: string | null
-          date_start?: string
-          date_stop?: string
-          engagement_rate_ranking?: string | null
+          ctr?: number | null
+          daily_budget?: number | null
+          date?: string
           frequency?: number | null
           id?: string
-          inline_link_click_ctr?: number | null
-          inline_link_clicks?: number | null
+          impressions?: number | null
+          initiate_checkout?: number | null
+          lifetime_budget?: number | null
+          name?: string | null
+          objective?: string | null
           project_id?: string | null
-          purchase_roas?: Json | null
-          quality_ranking?: string | null
+          purchase?: number | null
+          purchase_value?: number | null
+          reach?: number | null
+          roas?: number | null
           spend?: number | null
-          unique_actions?: Json | null
+          status?: string | null
           updated_at?: string | null
+          view_content?: number | null
         }
         Relationships: [
           {
@@ -441,16 +417,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_dashboard_metrics: {
-        Args: {
-          p_project_id: string
-          p_platform: string
-          p_metrics: string[]
-          p_start_date: string
-          p_end_date: string
-        }
-        Returns: Json
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
