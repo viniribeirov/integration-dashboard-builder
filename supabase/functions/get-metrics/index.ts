@@ -30,6 +30,14 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
+    console.log('Fetching metrics with parameters:', {
+      project_id,
+      platform,
+      metrics,
+      start_date,
+      end_date
+    });
+    
     // Call the database function to get the metrics
     const { data, error } = await supabase.rpc('get_dashboard_metrics', {
       p_project_id: project_id,
@@ -40,8 +48,11 @@ serve(async (req) => {
     });
     
     if (error) {
+      console.error('Error in get_dashboard_metrics:', error);
       throw error;
     }
+    
+    console.log('Successfully fetched metrics data');
     
     // Return the metrics data
     return new Response(

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Modal, 
@@ -35,7 +34,6 @@ interface AddWidgetModalProps {
 const METRIC_OPTIONS = {
   facebook: [
     { value: 'spend', label: 'Gasto' },
-    { value: 'impressions', label: 'Impressões' },
     { value: 'clicks', label: 'Cliques' },
     { value: 'ctr', label: 'Taxa de Cliques (CTR)' },
     { value: 'cpc', label: 'Custo por Clique (CPC)' },
@@ -65,7 +63,6 @@ const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
   
-  // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
       setName('');
@@ -77,14 +74,12 @@ const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
     }
   }, [isOpen]);
   
-  // Get available metrics based on selected platform
   const availableMetrics = platform ? METRIC_OPTIONS[platform as keyof typeof METRIC_OPTIONS] || [] : [];
   
   const handleMetricToggle = (metric: string) => {
     if (selectedMetrics.includes(metric)) {
       setSelectedMetrics(selectedMetrics.filter(m => m !== metric));
     } else {
-      // For KPI widgets, only allow one metric
       if (type === 'kpi' && !useCustomFormula) {
         setSelectedMetrics([metric]);
       } else {
@@ -141,7 +136,6 @@ const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
     try {
       setIsLoading(true);
       
-      // Get the current highest position
       const { data: widgets, error: countError } = await supabase
         .from('dashboard_widgets')
         .select('position')
@@ -153,7 +147,6 @@ const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
       
       const position = widgets && widgets.length > 0 ? widgets[0].position + 1 : 0;
       
-      // Create the widget
       const { error } = await supabase
         .from('dashboard_widgets')
         .insert({
@@ -239,7 +232,6 @@ const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
                 value={type} 
                 onChange={(e) => {
                   setType(e.target.value);
-                  // Reset metrics if changing to/from KPI type
                   if (e.target.value === 'kpi' && selectedMetrics.length > 1) {
                     setSelectedMetrics(selectedMetrics.length > 0 ? [selectedMetrics[0]] : []);
                   }
@@ -260,10 +252,8 @@ const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
                 onChange={(e) => {
                   setUseCustomFormula(e.target.checked);
                   if (e.target.checked) {
-                    // When using custom formula, select all metrics but don't display them directly
                     setSelectedMetrics(availableMetrics.map(m => m.value));
                   } else {
-                    // When disabling custom formula, reset to single metric for KPI
                     if (type === 'kpi') {
                       setSelectedMetrics(selectedMetrics.length > 0 ? [selectedMetrics[0]] : []);
                     }

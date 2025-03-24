@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { DateRange } from 'react-day-picker';
 import { WidgetData } from '../components/dashboard/WidgetCard';
+import { toast } from '../components/ui/use-toast';
 
 export interface DashboardWidget {
   id: string;
@@ -39,9 +40,15 @@ export const useDashboard = (projectId: string | undefined, dateRange: DateRange
       
       if (error) throw error;
       
+      console.log('Fetched widgets:', data);
       setWidgets(data || []);
     } catch (error) {
       console.error('Error fetching widgets:', error);
+      toast({
+        title: "Erro ao carregar widgets",
+        description: "Não foi possível carregar os widgets do dashboard.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -67,6 +74,8 @@ export const useDashboard = (projectId: string | undefined, dateRange: DateRange
         // Collect all metrics needed for this platform
         const allMetrics = [...new Set(platformWidgets.flatMap(w => w.metrics))];
         
+        console.log('Fetching metrics for platform:', platform, 'with metrics:', allMetrics);
+        
         try {
           const response = await supabase.functions.invoke('get-metrics', {
             body: {
@@ -79,8 +88,11 @@ export const useDashboard = (projectId: string | undefined, dateRange: DateRange
           });
           
           if (response.error) {
+            console.error('Error response from get-metrics:', response.error);
             throw new Error(response.error);
           }
+          
+          console.log('Received metrics data:', response.data);
           
           // Update each widget with the data
           platformWidgets.forEach(widget => {
@@ -94,12 +106,22 @@ export const useDashboard = (projectId: string | undefined, dateRange: DateRange
           });
         } catch (error) {
           console.error(`Error fetching data for platform ${platform}:`, error);
+          toast({
+            title: `Erro ao carregar dados da plataforma ${platform}`,
+            description: "Não foi possível carregar os dados para esta plataforma.",
+            variant: "destructive"
+          });
         }
       }
       
       setWidgets(updatedWidgets);
     } catch (error) {
       console.error('Error fetching widget data:', error);
+      toast({
+        title: "Erro ao carregar dados dos widgets",
+        description: "Não foi possível carregar os dados dos widgets.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoadingData(false);
     }
