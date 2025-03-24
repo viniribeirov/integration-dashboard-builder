@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.facebook-fill-missing]
 verify_jwt = false
+
+[functions.get-metrics]
+verify_jwt = false
