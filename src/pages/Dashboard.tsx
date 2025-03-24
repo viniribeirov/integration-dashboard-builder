@@ -84,7 +84,13 @@ const Dashboard = () => {
           
         if (error) throw error;
         
-        setIntegrations(data || []);
+        // Ensure proper typing for integrations
+        const typedIntegrations: Integration[] = data?.map(integration => ({
+          ...integration,
+          platform: integration.platform as 'facebook' | 'google' | 'instagram' | 'twitter' | 'linkedin'
+        })) || [];
+        
+        setIntegrations(typedIntegrations);
       } catch (error) {
         console.error('Error fetching integrations:', error);
       }
@@ -160,7 +166,7 @@ const Dashboard = () => {
 
   return (
     <AuthLayout>
-      <ChakraProvider theme={theme}>
+      <ChakraProvider theme={extendTheme}>
         <div className={`transition-all duration-700 ease-out ${
           hasAnimated ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
@@ -186,6 +192,7 @@ const Dashboard = () => {
           </div>
 
           {!selectedProject ? (
+            /* ... keep existing code (project selection prompt) */
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-muted-foreground/40 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2z" />
@@ -219,6 +226,7 @@ const Dashboard = () => {
 
               {/* Placeholder when no widgets */}
               {widgets.length === 0 ? (
+                /* ... keep existing code (empty widgets placeholder) */
                 <Box 
                   borderWidth="2px" 
                   borderStyle="dashed" 

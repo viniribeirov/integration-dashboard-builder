@@ -154,7 +154,11 @@ const WidgetCard: React.FC<WidgetProps> = ({
                 />
                 <YAxis />
                 <Tooltip 
-                  formatter={(value, name) => [formatMetricValue(name, value as number), name]}
+                  formatter={(value, name) => {
+                    // Convert name to string if it's not already
+                    const metricName = typeof name === 'string' ? name : String(name);
+                    return [formatMetricValue(metricName, value as number), metricName];
+                  }}
                   labelFormatter={(label) => new Date(label).toLocaleDateString('pt-BR')}
                 />
                 {metrics.map((metric) => (
@@ -176,7 +180,11 @@ const WidgetCard: React.FC<WidgetProps> = ({
                 />
                 <YAxis />
                 <Tooltip 
-                  formatter={(value, name) => [formatMetricValue(name, value as number), name]}
+                  formatter={(value, name) => {
+                    // Convert name to string if it's not already
+                    const metricName = typeof name === 'string' ? name : String(name);
+                    return [formatMetricValue(metricName, value as number), metricName];
+                  }}
                   labelFormatter={(label) => new Date(label).toLocaleDateString('pt-BR')}
                 />
                 {metrics.map((metric) => (

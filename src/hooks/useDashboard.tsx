@@ -4,6 +4,7 @@ import { supabase } from '../integrations/supabase/client';
 import { DateRange } from 'react-day-picker';
 import { WidgetData } from '../components/dashboard/WidgetCard';
 import { toast } from '../components/ui/use-toast';
+import { Json } from '../integrations/supabase/types';
 
 export interface DashboardWidget {
   id: string;
@@ -41,7 +42,14 @@ export const useDashboard = (projectId: string | undefined, dateRange: DateRange
       if (error) throw error;
       
       console.log('Fetched widgets:', data);
-      setWidgets(data || []);
+      // Cast the data to ensure type safety
+      const typedWidgets: DashboardWidget[] = data?.map(widget => ({
+        ...widget,
+        type: widget.type as 'kpi' | 'line' | 'bar' | 'area',
+        metrics: widget.metrics as unknown as string[]
+      })) || [];
+      
+      setWidgets(typedWidgets);
     } catch (error) {
       console.error('Error fetching widgets:', error);
       toast({
@@ -143,7 +151,14 @@ export const useDashboard = (projectId: string | undefined, dateRange: DateRange
       if (error) throw error;
       
       if (data && data.length > 0) {
-        setWidgets([...widgets, data[0]]);
+        // Ensure proper typing when adding the new widget
+        const newWidget: DashboardWidget = {
+          ...data[0],
+          type: data[0].type as 'kpi' | 'line' | 'bar' | 'area',
+          metrics: data[0].metrics as unknown as string[]
+        };
+        
+        setWidgets([...widgets, newWidget]);
       }
       
       await fetchWidgetData();
