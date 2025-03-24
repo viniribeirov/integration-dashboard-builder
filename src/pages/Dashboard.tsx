@@ -87,7 +87,8 @@ const Dashboard = () => {
         // Ensure proper typing for integrations
         const typedIntegrations: Integration[] = data?.map(integration => ({
           ...integration,
-          platform: integration.platform as 'facebook' | 'google' | 'instagram' | 'twitter' | 'linkedin'
+          platform: integration.platform as 'facebook' | 'google' | 'instagram' | 'twitter' | 'linkedin',
+          status: integration.status as 'connected' | 'disconnected' | 'pending'
         })) || [];
         
         setIntegrations(typedIntegrations);
@@ -166,7 +167,7 @@ const Dashboard = () => {
 
   return (
     <AuthLayout>
-      <ChakraProvider theme={extendTheme}>
+      <ChakraProvider theme={theme}>
         <div className={`transition-all duration-700 ease-out ${
           hasAnimated ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
