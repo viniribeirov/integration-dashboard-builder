@@ -1,3 +1,4 @@
+
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardWidget } from '@/types';
@@ -19,10 +20,21 @@ export const loadWidgetsFromSupabase = async (): Promise<DashboardWidget[]> => {
       return [];
     }
     
-    // Fix: Convert string to array if necessary
+    // Transform database records to match the DashboardWidget type
     return data.map(widget => ({
-      ...widget,
-      metrics: Array.isArray(widget.metrics) ? widget.metrics : JSON.parse(widget.metrics || '[]')
+      id: widget.id,
+      name: widget.widget_name,
+      type: widget.visualization_type as "kpi" | "line" | "bar" | "area",
+      platform: widget.platform as "facebook" | "google" | "instagram" | "twitter" | "linkedin",
+      metrics: Array.isArray(widget.metrics) 
+        ? widget.metrics 
+        : typeof widget.metrics === 'string' 
+          ? JSON.parse(widget.metrics) 
+          : [],
+      size: 'medium', // Default size
+      position: widget.position,
+      custom_formula: widget.formula || '',
+      project_id: widget.project_id
     })) as DashboardWidget[];
     
   } catch (error) {
@@ -80,7 +92,7 @@ export async function addWidgetToSupabase(widget: Omit<DashboardWidget, 'id'>, w
         widget_name: widget.name,
         visualization_type: widget.type,
         platform: widget.platform,
-        metrics: widget.metrics,
+        metrics: widget.metrics, // Ensure metrics is always an array
         position: nextPosition,
         formula: widget.custom_formula || null,
         project_id: widget.project_id // Ensure project_id is included
@@ -100,7 +112,7 @@ export async function addWidgetToSupabase(widget: Omit<DashboardWidget, 'id'>, w
       name: data.widget_name,
       type: data.visualization_type as "kpi" | "line" | "bar" | "area",
       platform: data.platform as "facebook" | "google" | "instagram" | "twitter" | "linkedin",
-      metrics: data.metrics || [],
+      metrics: Array.isArray(data.metrics) ? data.metrics : [],
       size: 'medium',
       position: data.position,
       custom_formula: data.formula || '',
