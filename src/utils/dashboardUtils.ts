@@ -27,7 +27,7 @@ export const loadWidgetsFromSupabase = async (): Promise<DashboardWidget[]> => {
       type: widget.visualization_type as "kpi" | "line" | "bar" | "area",
       platform: widget.platform as "facebook" | "google" | "instagram" | "twitter" | "linkedin",
       metrics: Array.isArray(widget.metrics) 
-        ? widget.metrics 
+        ? widget.metrics.map(item => String(item)) // Convert all items to strings
         : typeof widget.metrics === 'string' 
           ? JSON.parse(widget.metrics) 
           : [],
@@ -92,7 +92,7 @@ export async function addWidgetToSupabase(widget: Omit<DashboardWidget, 'id'>, w
         widget_name: widget.name,
         visualization_type: widget.type,
         platform: widget.platform,
-        metrics: widget.metrics, // Ensure metrics is always an array
+        metrics: widget.metrics, // Ensure metrics is always an array of strings
         position: nextPosition,
         formula: widget.custom_formula || null,
         project_id: widget.project_id // Ensure project_id is included
@@ -112,7 +112,9 @@ export async function addWidgetToSupabase(widget: Omit<DashboardWidget, 'id'>, w
       name: data.widget_name,
       type: data.visualization_type as "kpi" | "line" | "bar" | "area",
       platform: data.platform as "facebook" | "google" | "instagram" | "twitter" | "linkedin",
-      metrics: Array.isArray(data.metrics) ? data.metrics : [],
+      metrics: Array.isArray(data.metrics) 
+        ? data.metrics.map(item => String(item)) // Convert all items to strings
+        : [],
       size: 'medium',
       position: data.position,
       custom_formula: data.formula || '',
