@@ -143,7 +143,11 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             />
             <YAxis tick={{ fontSize: 12 }} />
             <Tooltip 
-              formatter={(value, name) => [formatValue(Number(value), name as string), metrics.find(m => m.value === name)?.label || name]}
+              formatter={(value, name) => {
+                // Safely convert name to string to avoid type issues
+                const metricName = String(name);
+                return [formatValue(Number(value), metricName), metrics.find(m => m.value === metricName)?.label || metricName];
+              }}
             />
             <Legend />
             {widget.metrics.map((metricKey, index) => (
@@ -174,7 +178,11 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             />
             <YAxis tick={{ fontSize: 12 }} />
             <Tooltip 
-              formatter={(value, name) => [formatValue(Number(value), name as string), metrics.find(m => m.value === name)?.label || name]}
+              formatter={(value, name) => {
+                // Safely convert name to string to avoid type issues
+                const metricName = String(name);
+                return [formatValue(Number(value), metricName), metrics.find(m => m.value === metricName)?.label || metricName];
+              }}
             />
             <Legend />
             {widget.metrics.map((metricKey, index) => (
@@ -203,7 +211,11 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             />
             <YAxis tick={{ fontSize: 12 }} />
             <Tooltip 
-              formatter={(value, name) => [formatValue(Number(value), name as string), metrics.find(m => m.value === name)?.label || name]}
+              formatter={(value, name) => {
+                // Safely convert name to string to avoid type issues
+                const metricName = String(name);
+                return [formatValue(Number(value), metricName), metrics.find(m => m.value === metricName)?.label || metricName];
+              }}
             />
             <Legend />
             {widget.metrics.map((metricKey, index) => (
