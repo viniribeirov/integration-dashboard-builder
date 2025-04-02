@@ -1,44 +1,35 @@
-
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardWidget } from '@/types';
 import { toast } from 'sonner';
 
 // Load dashboard widgets from Supabase
-export async function loadWidgetsFromSupabase() {
+export const loadWidgetsFromSupabase = async (): Promise<DashboardWidget[]> => {
   try {
-    // Using generic fetch to avoid typing issues with project_widgets table
     const { data, error } = await supabase
       .from('project_widgets')
-      .select('*')
-      .order('position', { ascending: true });
+      .select('*');
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error loading widgets:', error);
+      return [];
+    }
     
     if (!data) {
       return [];
     }
     
-    // Type-safe conversion for dashboard widgets
-    const typedWidgets: DashboardWidget[] = data.map((widget: any) => ({
-      id: widget.id,
-      name: widget.widget_name,
-      type: widget.visualization_type as "kpi" | "line" | "bar" | "area",
-      platform: widget.platform as "facebook" | "google" | "instagram" | "twitter" | "linkedin",
-      metrics: Array.isArray(widget.metrics) ? widget.metrics : [],
-      size: 'medium' as 'small' | 'medium' | 'large',
-      position: widget.position,
-      custom_formula: widget.formula || '',
-      project_id: widget.project_id
-    }));
+    // Fix: Convert string to array if necessary
+    return data.map(widget => ({
+      ...widget,
+      metrics: Array.isArray(widget.metrics) ? widget.metrics : JSON.parse(widget.metrics || '[]')
+    })) as DashboardWidget[];
     
-    return typedWidgets;
   } catch (error) {
-    console.error('Error loading widgets:', error);
-    toast.error('Failed to load dashboard widgets');
+    console.error('Error in loadWidgetsFromSupabase:', error);
     return [];
   }
-}
+};
 
 // Load dashboard metrics data
 export async function loadDashboardMetricsData(
