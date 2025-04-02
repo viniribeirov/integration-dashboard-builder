@@ -1,12 +1,11 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowUpIcon, ArrowDownIcon, ChevronUpIcon, ChevronDownIcon } from 'lucide-react';
-import { DashboardWidget, MetricData } from '@/types';
-import { Line, Bar, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid, LineChart, BarChart, AreaChart } from 'recharts';
-import { formatCurrency, formatPercentage } from '@/lib/utils';
+import { DashboardWidget } from '@/types';
 import { useDashboard } from '@/hooks/useDashboard';
+import KpiWidget from './widgets/KpiWidget';
+import ChartWidget from './widgets/ChartWidget';
+import WidgetLoadingSkeleton from './WidgetLoadingSkeleton';
 
 interface WidgetCardProps {
   widget: DashboardWidget;
@@ -19,53 +18,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
 }) => {
   const { metrics, dashboardData } = useDashboard();
   
-  // Helper to format the value based on metric type
-  const formatValue = (value: number | undefined, metricKey: string): string => {
-    if (value === undefined || value === null) return 'N/A';
-    
-    if (metricKey === 'spend') {
-      return formatCurrency(value);
-    } else if (metricKey === 'ctr') {
-      return formatPercentage(value);
-    } else if (metricKey === 'cpc' || metricKey === 'cpm') {
-      return formatCurrency(value);
-    } else {
-      return value.toLocaleString();
-    }
-  };
-  
-  // Helper to determine percentage change
-  const calculatePercentChange = (current?: number, previous?: number): number | null => {
-    if (current === undefined || previous === undefined || previous === 0) return null;
-    return ((current - previous) / previous) * 100;
-  };
-  
-  // Helper to render the change indicator
-  const renderChangeIndicator = (percentChange: number | null) => {
-    if (percentChange === null) return null;
-    
-    const isPositive = percentChange > 0;
-    const isMetricBetter = isPositive; // This depends on the metric - for some metrics negative change is better
-    
-    return (
-      <div className={`flex items-center text-sm ${isMetricBetter ? 'text-green-500' : 'text-red-500'}`}>
-        {isPositive ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
-        <span>{Math.abs(percentChange).toFixed(1)}%</span>
-      </div>
-    );
-  };
-  
   // Handle loading state
   if (isLoading) {
-    return (
-      <Card className={`shadow-sm h-full ${widget.size === 'large' ? 'col-span-2' : ''}`}>
-        <CardContent className="p-6">
-          <Skeleton className="h-4 w-1/3 mb-2" />
-          <Skeleton className="h-10 w-1/2 mb-4" />
-          <Skeleton className="h-[150px] w-full" />
-        </CardContent>
-      </Card>
-    );
+    return <WidgetLoadingSkeleton isLarge={widget.size === 'large'} />;
   }
   
   const widgetData = dashboardData?.[widget.platform];
@@ -98,15 +53,13 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         ? widgetData.previous[metricKey] 
         : undefined;
       
-      const percentChange = calculatePercentChange(currentValue, previousValue);
-      
       return (
-        <div className="flex flex-col">
-          <div className="text-2xl font-bold">
-            {formatValue(currentValue, metricKey)}
-          </div>
-          {renderChangeIndicator(percentChange)}
-        </div>
+        <KpiWidget
+          metricKey={metricKey}
+          currentValue={currentValue}
+          previousValue={previousValue}
+          metrics={metrics}
+        />
       );
     }
     
@@ -127,113 +80,15 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       return dataPoint;
     });
     
-    // Define chart components based on widget type
-    if (widget.type === 'line') {
-      return (
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="date" 
-              tick={{ fontSize: 12 }}
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return `${date.getDate()}/${date.getMonth() + 1}`;
-              }}
-            />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip 
-              formatter={(value, name) => {
-                // Safely convert name to string to avoid type issues
-                const metricName = String(name);
-                return [formatValue(Number(value), metricName), metrics.find(m => m.value === metricName)?.label || metricName];
-              }}
-            />
-            <Legend />
-            {widget.metrics.map((metricKey, index) => (
-              <Line 
-                key={metricKey}
-                type="monotone"
-                dataKey={metricKey}
-                name={metrics.find(m => m.value === metricKey)?.label || metricKey}
-                stroke={`hsl(${(index * 50) % 360}, 70%, 50%)`}
-                activeDot={{ r: 8 }}
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      );
-    } else if (widget.type === 'bar') {
-      return (
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="date" 
-              tick={{ fontSize: 12 }}
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return `${date.getDate()}/${date.getMonth() + 1}`;
-              }}
-            />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip 
-              formatter={(value, name) => {
-                // Safely convert name to string to avoid type issues
-                const metricName = String(name);
-                return [formatValue(Number(value), metricName), metrics.find(m => m.value === metricName)?.label || metricName];
-              }}
-            />
-            <Legend />
-            {widget.metrics.map((metricKey, index) => (
-              <Bar 
-                key={metricKey}
-                dataKey={metricKey}
-                name={metrics.find(m => m.value === metricKey)?.label || metricKey}
-                fill={`hsl(${(index * 50) % 360}, 70%, 50%)`}
-              />
-            ))}
-          </BarChart>
-        </ResponsiveContainer>
-      );
-    } else if (widget.type === 'area') {
-      return (
-        <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="date" 
-              tick={{ fontSize: 12 }}
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return `${date.getDate()}/${date.getMonth() + 1}`;
-              }}
-            />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip 
-              formatter={(value, name) => {
-                // Safely convert name to string to avoid type issues
-                const metricName = String(name);
-                return [formatValue(Number(value), metricName), metrics.find(m => m.value === metricName)?.label || metricName];
-              }}
-            />
-            <Legend />
-            {widget.metrics.map((metricKey, index) => (
-              <Area 
-                key={metricKey}
-                type="monotone"
-                dataKey={metricKey}
-                name={metrics.find(m => m.value === metricKey)?.label || metricKey}
-                fill={`hsla(${(index * 50) % 360}, 70%, 50%, 0.5)`}
-                stroke={`hsl(${(index * 50) % 360}, 70%, 50%)`}
-              />
-            ))}
-          </AreaChart>
-        </ResponsiveContainer>
-      );
-    }
-    
-    return null;
+    // Use our ChartWidget component for all chart types
+    return (
+      <ChartWidget
+        type={widget.type}
+        metrics={widget.metrics}
+        data={chartData}
+        metricsList={metrics}
+      />
+    );
   };
   
   return (

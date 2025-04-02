@@ -25,7 +25,7 @@ export async function loadWidgetsFromSupabase() {
       name: widget.widget_name,
       type: widget.visualization_type as "kpi" | "line" | "bar" | "area",
       platform: widget.platform as "facebook" | "google" | "instagram" | "twitter" | "linkedin",
-      metrics: widget.metrics || [],
+      metrics: Array.isArray(widget.metrics) ? widget.metrics : [],
       size: 'medium' as 'small' | 'medium' | 'large',
       position: widget.position,
       custom_formula: widget.formula || '',
