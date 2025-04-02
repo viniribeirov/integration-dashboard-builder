@@ -7,10 +7,15 @@ import { useProject } from '../contexts/ProjectContext';
 import { useOnceAnimation } from '../utils/animations';
 import { supabase } from '../integrations/supabase/client';
 import { DateRange } from 'react-day-picker';
+import { DashboardProvider } from '../hooks/useDashboard';
+import DashboardContent from '../components/dashboard/DashboardContent';
+import { Integration } from '@/types';
 
 const Dashboard = () => {
   const { selectedProject, refreshProjects } = useProject();
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
+  const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(true);
   const hasAnimated = useOnceAnimation(100);
 
   useEffect(() => {
@@ -35,10 +40,44 @@ const Dashboard = () => {
     };
   }, [refreshProjects]);
 
+  useEffect(() => {
+    const fetchIntegrations = async () => {
+      if (!selectedProject?.id) {
+        setIntegrations([]);
+        setIsLoadingIntegrations(false);
+        return;
+      }
+
+      try {
+        setIsLoadingIntegrations(true);
+        const { data, error } = await supabase
+          .from('integrations')
+          .select('*')
+          .eq('project_id', selectedProject.id);
+
+        if (error) throw error;
+
+        // Type-safe casting for integrations
+        const typedIntegrations: Integration[] = data.map((item: any) => ({
+          ...item,
+          platform: item.platform as "facebook" | "google" | "instagram" | "twitter" | "linkedin",
+          status: item.status as "connected" | "disconnected" | "pending"
+        }));
+        
+        setIntegrations(typedIntegrations);
+      } catch (error) {
+        console.error('Error fetching integrations:', error);
+      } finally {
+        setIsLoadingIntegrations(false);
+      }
+    };
+
+    fetchIntegrations();
+  }, [selectedProject]);
+
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setDateRange(range);
     console.log('Date range changed:', range);
-    // Future implementation: Apply date range filter to dashboard data
   };
 
   return (
@@ -78,9 +117,13 @@ const Dashboard = () => {
             </p>
           </div>
         ) : (
-          <section className="border border-dashed rounded-lg p-8 text-center text-muted-foreground">
-            Em breve você poderá adicionar widgets aqui com as métricas do seu projeto.
-          </section>
+          <DashboardProvider>
+            <DashboardContent 
+              projectId={selectedProject.id} 
+              integrations={integrations}
+              isLoadingIntegrations={isLoadingIntegrations}
+            />
+          </DashboardProvider>
         )}
       </div>
     </AuthLayout>
